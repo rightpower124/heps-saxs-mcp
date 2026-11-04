@@ -1,0 +1,78 @@
+{
+  "name": "hardcarbon_closedpore_sf",
+  "version": "0.1.0",
+  "status": "candidate",
+  "description": "硬碳闭孔 Debye 关联（Stevens-Dahn）+ 结构因子 Lorentzian 峰项（nuisance）：幂律项 + 闭孔 Debye-Bueche 项 + 加性 Lorentzian 峰 + 常数背景；mode main（8 参数）；峰为用户确认的真实结构但其参数不作物理结论，闭孔四件套（D_pore/Rg/q_knee）为唯一物理关切量；Apk=0 嵌套退化为 hardcarbon_closedpore main（可嵌套 F 检验）",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "闭孔谱族：D. A. Stevens, J. R. Dahn, J. Electrochem. Soc. 147 (12) 4428-4431 (2000) Eq.1；应用文献 Zheng et al., Adv. Energy Mater. 2024, 14, 2303064 SI Fig.S10；峰形：Hammouda B.F. (NIST) Lorentzian 峰模型口径（SasView 峰类模型同族加性惯例）",
+    "ported_from": "hardcarbon_closedpore main（本库 validated）全保留 + 加性 Lorentzian 峰项 Apk/[1+((q-q0)/w)^2]；立项依据 = 2026-10-27 马文杰-闭孔-真密度 样品2 诊断链：closedpore main χ²/dof=924（结构性失配，多起点确认全局最优）→ full 双 Debye χ²/dof=377.6（Debye 形状函数无法产生局部极大）→ hardcarbon_ts χ²/dof=474（C1>0 设计性禁峰）→ 用户裁决峰为真实结构、参数不关心、闭孔为物理关切",
+    "local_reference": "D:\\博士后研究\\B自编程序\\2026-10-27-马文杰-闭孔-真密度\\（1/2_azimAvg_sub.dat + 诊断图件与报告）"
+  },
+  "modes": {
+    "main": {
+      "sample": "硬碳负极材料（闭孔微孔体系 + 低 q 关联峰干扰的样品，如 2026-10-27 样品2）",
+      "plot_title": "Hard carbon closed pores + SF peak (nuisance)",
+      "fit_label": "fit: A*q^-a + Bp*q^-4*F(a1*q) + Apk*L(q0,w) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "2026-10-27 马文杰-闭孔-真密度 样品2 立项（用户裁决：峰真实、峰参数不关心、闭孔为物理关切）；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.238, 9.8],
+    "q_window_note": "2026-10-27 样品2 实测窗口：剔除首 2 点光束stop边缘（q<0.235 nm⁻¹ σ 异常抬升）与末段 q>9.8 nm⁻¹ 边缘上翘噪声；换数据集须重新按首尾异常点裁决",
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='hardcarbon_closedpore_sf', mode='main', path, q_unit=与用户确认值, qmin/qmax=按数据首尾异常点裁决)",
+      "saxs_diag_multistart（峰项+闭孔幅度简并排查；起点须含峰参数变体）",
+      "嵌套 F 检验（vs hardcarbon_closedpore main，Apk=0，ssr=chi2_dof×dof 换算）",
+      "make_plots（两联图）+ saxs_report（四件套交付；闭孔四件套为主结论）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "每样品必备（Apk/q0/w 峰浅简并 + A/Bp 幅度简并 + a→4 共线区排查）"},
+      {"tool": "saxs_diag_param_scan", "when": "量化 q0/a1 简并宽度、膝位落窗辨识性取证时（重点扫 q0、a1）"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时（a 上界已预置 7.0；q0/w 撞界时）"}
+    ],
+    "notes": [
+      "峰项 nuisance 纪律：q0/FWHM/d 仅描述性披露，不作物理结论；报告主结论=闭孔四件套",
+      "膝位落窗前提：q_knee=1/a1 须落在 [qmin×1.5, qmax/1.5] 内，膝在窗外时 a1 不可辨识（仅 a 稳健），闭孔尺度量按条件值或不适配处理",
+      "INIT_QMAX=0.5（避开峰区防 A0 抬升压峰入关闭谷）：诊断窄窗 qmin 须 <0.5 nm⁻¹，否则 A0 估计带倒空报错（父模型 10-09 教训同类）",
+      "a 上界 7.0 的依据：2026-10-27 样品2 relax_bound 取证 a=5.114±0.118 稳健（full 模式 4.5→7）；换数据集如 a 未撞 4.5 可按需收紧"
+    ]
+  },
+  "labels": {
+    "A": ["幂律项幅度（颗粒/大结构散射）", ""],
+    "a": ["幂律指数（自由；上界 7.0，2026-10-27 relax_bound 取证）", ""],
+    "Bp": ["闭孔项 Porod 口径幅度（高 q 渐近 Bp·q⁻⁴；≡AEM SI 的 B；=Stevens 的 Δρ·B·a1²）", ""],
+    "a1": ["闭孔 Debye 特征长度（nm）→ Rg=a1√6 / D_pore=2a1√10", "nm"],
+    "Apk": ["峰幅度（nuisance）", ""],
+    "q0": ["峰位（nuisance；关联峰顶）", "nm^-1"],
+    "w": ["峰半高半宽 HWHM（nuisance）", "nm^-1"],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Stevens & Dahn 2000（闭孔谱族）+ Zheng et al., AEM 2024（应用形式）+ Hammouda (NIST) Lorentzian 峰（峰形）",
+    "si": "AEM 2024 SI Fig.S10（闭孔项公式与 R=2·a1·√10 口径）；Stevens 2000 原文 Eq.1 + Table I 拟合锚",
+    "method": "I(q) = A·q^(−a) + Bp·q⁻⁴·F(a1·q) + Apk/[1+((q−q0)/w)²] + B，F(x)=x⁴/(1+x²)²；派生 Rg=a1√6、R_sphere=a1√10、D_pore=2a1√10、q_knee=1/a1、FWHM=2w、d=2π/q0",
+    "assumptions": [
+      "① 闭孔项 = Debye-Anderson-Brumberger 关联函数（随机两相 Debye-Bueche 谱形），孔隙随机分布、无孔间干涉（Stevens 2000 原文假设）",
+      "② 峰项为**加性独立散射组分**（ phenomenological）：与闭孔群无干涉耦合；用户裁决其结构参数不作物理结论，仅作信号修正（nuisance）",
+      "③ 峰形取对称 Lorentzian（Hammouda/NIST 口径）：如峰形失配（残差峰区残留系统结构），升级路径为 pseudo-Voigt 或自由 C1 TS 峰项（SasView teubner_strey 对应）",
+      "④ 幂律项幅度 A 与闭孔 Porod 幅度 Bp 均为归一量（数据强度单位 a.u.），跨样品仅在同批强度标度内可比",
+      "⑤ a 上界 7.0 为本数据集 relax_bound 取证值（a=5.114 稳健），非普适物理边界；换数据集须复核",
+      "⑥ 本站针孔准直无狭缝 Smearing，幂律指数 a 自由拟合；空孔对比度固定（无 SLD 自由参数）"
+    ]
+  },
+  "smoke_truth": {
+    "note": "冒烟真值覆盖：峰主导（Apk=20）验证 q0/w/Apk 可恢复 + 闭孔三参数（a1=0.5 膝位 2 nm⁻¹ 落冒烟窗内）+ 幂律 a=2.0；B=0.001 验证背景通道",
+    "main": {"A": 0.5, "a": 2.0, "Bp": 2.0, "a1": 0.5, "Apk": 20.0, "q0": 0.6, "w": 0.3, "B": 0.001}
+  },
+  "validation": {
+    "L1_synthetic": "PENDING",
+    "L2_physical": "PENDING",
+    "human_review": "PENDING"
+  }
+}

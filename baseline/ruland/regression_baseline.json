@@ -1,0 +1,63 @@
+{
+  "schema": "heps-saxs/regression-baseline-v0",
+  "purpose": "Ruland 取向度分析（第二个模型/能力，260930 任务）T6 回归基准。T4 真实数据试跑（YR8，2026-09-30，f=0.02 正式口径）关键数值快照。ruland 引擎或工具壳重构后，用同一 filled_book 经 saxs_ruland_bpi2 → saxs_ruland_beq 重跑，关键数值必须与本文件逐位一致；若确需改变数值，先修订本文件并在设计文档 §9.2 记录原因。",
+  "created": "2026-09-30",
+  "source": "runs/YR8_saxs_series_436_data_000001_000064_ruland_bpi2_ftouch002/（B 表四件套）与 runs/YR8_saxs_series_436_data_000001_000064_ruland_beq_scan_f002/qmin0.240/（采纳窗 beq），工具 saxs_ruland v0.1.0，用户目检裁决 f_touch=0.02 转正",
+  "tolerance_rule": "逐位一致（字符串化后完全相等）；epsilon 仅允许 JSON 序列化的浮点表示差异",
+  "provenance": {
+    "data_bpi2_input": "test_data/ruland/YR8_saxs_series_436_data_000001_000064_ruland_filled_book.dat（YR8 gap 整备产物副本；原始曲线同目录 YR8_..._ruland.txt 备整备链复跑）",
+    "data_original": "test_data/ruland/YR8_saxs_series_436_data_000001_000064_ruland.txt（16 列方位角积分曲线，第 1 列 phi/deg）",
+    "q_unit_in": "nm^-1（文件头 q_values 显式）",
+    "x_semantic": "phi，x_unit=deg",
+    "phi_ref": 88.3773,
+    "phi_ref_source": "auto（series 级聚类，确认卡确认）",
+    "touch_params": { "f_touch": 0.02, "n_noise": 3.0, "m_hold": 3 },
+    "tail_correction_factor": 1.0052,
+    "bpi2_b_column": "B_rad_corr（含高斯尾校正）；B 表另含 B_deg/B_rad 未校正列",
+    "beq_B_column": "B_rad_corr",
+    "beq_adopted_window": "q>=0.240（最大无曲率窗规则：qmin 0.182/0.202/0.221 曲率 F 检验 p<0.05 触发，qmin0.240 p=0.0595>=0.05）"
+  },
+  "bpi2_rows": [
+    { "q_nm": 0.105, "B_deg": 17.8955, "B_rad": 0.312336, "B_rad_corr": 0.313955, "n_pts": 85, "n_filled": 6 },
+    { "q_nm": 0.124, "B_deg": 18.3518, "B_rad": 0.3203, "B_rad_corr": 0.32196, "n_pts": 86, "n_filled": 2 },
+    { "q_nm": 0.144, "B_deg": 18.295, "B_rad": 0.319308, "B_rad_corr": 0.320962, "n_pts": 86, "n_filled": 0 },
+    { "q_nm": 0.163, "B_deg": 18.2973, "B_rad": 0.319347, "B_rad_corr": 0.321002, "n_pts": 87, "n_filled": 0 },
+    { "q_nm": 0.182, "B_deg": 17.639, "B_rad": 0.307859, "B_rad_corr": 0.309454, "n_pts": 83, "n_filled": 0 },
+    { "q_nm": 0.202, "B_deg": 17.97, "B_rad": 0.313635, "B_rad_corr": 0.315261, "n_pts": 87, "n_filled": 0 },
+    { "q_nm": 0.221, "B_deg": 17.7063, "B_rad": 0.309033, "B_rad_corr": 0.310634, "n_pts": 85, "n_filled": 0 },
+    { "q_nm": 0.24, "B_deg": 17.3095, "B_rad": 0.302108, "B_rad_corr": 0.303673, "n_pts": 81, "n_filled": 0 },
+    { "q_nm": 0.26, "B_deg": 17.4802, "B_rad": 0.305087, "B_rad_corr": 0.306668, "n_pts": 85, "n_filled": 0 },
+    { "q_nm": 0.279, "B_deg": 17.1074, "B_rad": 0.29858, "B_rad_corr": 0.300128, "n_pts": 82, "n_filled": 0 },
+    { "q_nm": 0.298, "B_deg": 17.0252, "B_rad": 0.297146, "B_rad_corr": 0.298686, "n_pts": 79, "n_filled": 0 },
+    { "q_nm": 0.318, "B_deg": 16.6303, "B_rad": 0.290253, "B_rad_corr": 0.291758, "n_pts": 74, "n_filled": 0 },
+    { "q_nm": 0.337, "B_deg": 16.5272, "B_rad": 0.288455, "B_rad_corr": 0.289949, "n_pts": 71, "n_filled": 0 },
+    { "q_nm": 0.356, "B_deg": 16.0278, "B_rad": 0.279738, "B_rad_corr": 0.281187, "n_pts": 67, "n_filled": 0 },
+    { "q_nm": 0.376, "B_deg": 15.8586, "B_rad": 0.276784, "B_rad_corr": 0.278218, "n_pts": 65, "n_filled": 0 },
+    { "q_nm": 0.395, "B_deg": 15.8151, "B_rad": 0.276026, "B_rad_corr": 0.277456, "n_pts": 62, "n_filled": 0 }
+  ],
+  "beq_adopted": {
+    "q_window": [0.24, 0.395],
+    "n_pts": 9,
+    "slope_per_nm2": 0.06505087149014417,
+    "intercept_per_nm2": 0.001910303451406502,
+    "r2": 0.9922149535119873,
+    "B_eq_rad": 0.2550507233672239,
+    "B_eq_deg": 14.613330010700613,
+    "f_v_coeff": 0.299032173259696,
+    "f_v": 0.9237316279000415,
+    "loo_max_rel_dev": 0.02048695381216358,
+    "curvature_F_p": 0.059477635977223664,
+    "q_span_ratio": 1.6458333333333335,
+    "flags": ["q_span_narrow"],
+    "grade": "条件值（q_span_narrow 结构性 flag；窗口敏感性带 14.2~14.9°）"
+  },
+  "linear_region_scan_curvature_F_p": {
+    "note": "7 窗扫描的曲率 F 检验 p 值（最大无曲率窗规则的采纳证据链，回归时核对采纳窗不变）",
+    "qmin0.182": 0.0004018796203818509,
+    "qmin0.202": 0.0032139883171163897,
+    "qmin0.221": 0.014443574441904472,
+    "qmin0.240": 0.059477635977223664,
+    "qmin0.260": 0.35961074414443617,
+    "qmin0.279": 0.6547288686153934
+  }
+}

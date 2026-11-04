@@ -1,0 +1,50 @@
+{
+  "_说明": "M2.5-1 数据读取通用化测试集：8 个合成夹具覆盖仓库调研确证的 7 维格式变体。验证 = saxs_probe_curve 格式卡与 probe_expected 一致 + saxs_load_curve 摘要与 load_expected 一致（q 单位统一 nm^-1）。q 公共网格 0.30–2.80，6 点。",
+  "维度覆盖": {
+    "①编码": "v1 UTF-8 BOM / v2 GBK / v3 UTF-16LE BOM / 其余 UTF-8 无 BOM",
+    "②分隔符": "v1 逗号 / v2 Tab / 其余空白",
+    "③表头": "v1 v4 v5 v7 v8 # 元数据块 / v2 非# 纯文本表头 / v3 # + 机器可读列头",
+    "④q单位与列语义": "v3 A^-1 需×10 / v1 v2 v4 v5 v6 v8 nm^-1 / v7 2θ（需波长）/ v8 并排双块（block 选择）",
+    "⑤行尾": "v4 v2 CRLF / v6 CRLF+LF 混杂 / 其余 LF",
+    "⑥坏行": "v6 NaN 行 + 负 σ 行",
+    "⑦列数": "v4 两列（无σ）/ v5 四列（富余列）/ v8 四列双块"
+  },
+  "fixtures": {
+    "v1_utf8bom_comma.csv": {
+      "probe_expected": {"encoding": "utf-8-sig", "delimiter": "comma", "n_data_columns": 3, "unit_hint.value": "nm^-1", "suspect_dual_block": false},
+      "load_expected": {"q_unit": "nm^-1", "n_total": 6, "n_used": 6, "q_min": 0.3, "q_max": 2.8}
+    },
+    "v2_gbk_tab.dat": {
+      "probe_expected": {"encoding": "gbk", "delimiter": "tab", "n_data_columns": 3, "unit_hint.value": "nm^-1"},
+      "load_expected": {"q_unit": "nm^-1", "n_total": 6, "n_used": 6, "q_min": 0.3, "q_max": 2.8}
+    },
+    "v3_utf16le_space.dat": {
+      "probe_expected": {"encoding": "utf-16", "delimiter": "space", "n_data_columns": 3, "unit_hint.value": "A^-1"},
+      "load_expected": {"q_unit": "A^-1", "n_total": 6, "n_used": 6, "q_min": 0.3, "q_max": 2.8}
+    },
+    "v4_utf8_2col.dat": {
+      "probe_expected": {"encoding": "utf-8", "delimiter": "space", "n_data_columns": 2},
+      "load_expected": {"q_unit": "nm^-1", "col_s": null, "n_used": 6, "unweighted": true, "q_min": 0.3, "q_max": 2.8}
+    },
+    "v5_utf8_4col.dat": {
+      "probe_expected": {"encoding": "utf-8", "delimiter": "space", "n_data_columns": 4},
+      "load_expected": {"q_unit": "nm^-1", "col_q": 0, "col_i": 1, "col_s": 2, "n_used": 6, "q_min": 0.3, "q_max": 2.8}
+    },
+    "v6_utf8_crlf_nan.dat": {
+      "probe_expected": {"encoding": "utf-8", "delimiter": "space", "n_data_columns": 3, "line_endings": "CRLF/LF 混杂"},
+      "load_expected": {"q_unit": "nm^-1", "n_total": 7, "n_bad_lines": 1, "n_used": 6, "n_dropped_window": 1, "q_min": 0.3, "q_max": 2.8}
+    },
+    "v7_two_theta.dat": {
+      "probe_expected": {"encoding": "utf-8", "delimiter": "space", "n_data_columns": 3, "unit_hint.value": "2theta", "suspect_nonq": "header_indicates_2theta"},
+      "load_expected": {"q_unit": "2theta", "two_theta_wavelength_A": 1.54, "n_used": 6, "q_min_约": 0.3, "q_max_约": 2.8, "判据": "q_min/q_max 与 0.30/2.80 偏差 < 0.01 nm^-1"}
+    },
+    "v8_dual_block.dat": {
+      "probe_expected": {"encoding": "utf-8", "delimiter": "space", "n_data_columns": 4, "suspect_dual_block": true},
+      "load_expected": {
+        "block0": {"q_unit": "nm^-1", "block": 0, "n_used": 6, "q_min": 0.3, "q_max": 2.8, "I_max": 0.1112},
+        "block1": {"q_unit": "nm^-1", "block": 1, "n_used": 6, "q_min": 0.3, "q_max": 2.8, "I_max": 0.0556}
+      }
+    }
+  },
+  "回归要求": "saxs_load_curve fmt=None 路径不变：test_data/liposome 两文件 nopeg/peg 拟合与 baseline\\liposome\\regression_baseline.json 逐位一致；saxs_selftest ok=true"
+}

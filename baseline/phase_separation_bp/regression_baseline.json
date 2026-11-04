@@ -1,0 +1,44 @@
+{
+  "model": "phase_separation_bp",
+  "version": "0.1.0",
+  "frozen_at": "2026-10-22",
+  "anchor": {
+    "data_file": "test_data/phase_separation_bp/1.dat",
+    "data_source": "D:/博士后研究/B自编程序/2025-03-05-相分离-界面层厚度/1.dat（Xeuss 3.0, Cu 靶, sd=600mm, t=600s, q_unit=A^-1 列头 q(A-1)，858 点）",
+    "mode": "gauss",
+    "q_unit_input": "A^-1",
+    "fmt": {"encoding": "utf-8", "delimiter": "space", "skip_rows": 88, "col_q": 0, "col_i": 1, "col_s": 2, "q_unit": "A^-1"},
+    "q_window_nm": [0.075, 0.9],
+    "q_window_note": "下界=束挡截止 0.0722 nm^-1 后首点；上界=弥散界面 Porod 偏离区起点（数据驱动，勿套用）",
+    "weighting": "weighted (sigma 列)"
+  },
+  "regression": {
+    "chi2_dof": 2.306504729943173,
+    "dof": 480,
+    "n_points": 486,
+    "params": {
+      "A": 0.000461628741253438,
+      "dm": 2.340601571190848,
+      "amp": 0.05658617155045435,
+      "q0": 0.4599597691668132,
+      "sigma": 0.2033905940768143,
+      "B": 0.007841075086349214
+    },
+    "derived": {
+      "d_period_nm": 13.66029320034046,
+      "d_period_nm_err": 0.02032196727817623,
+      "fwhm_nm1": 0.4789482479028354,
+      "fwhm_nm1_err": 0.0023176802678114335
+    },
+    "at_bound": [],
+    "rms_rel": 0.018351416470773787
+  },
+  "evidence_chain": {
+    "peak_shape_compare": "gauss chi2/dof=2.306504729943173 vs lorentz 18.39880883829859（lorentz B 撞界）→ gauss 胜出 8 倍",
+    "peak_pos_cross_shape": "gauss q0=0.45995977 vs lorentz q0=0.46856313 nm^-1（1.9% 一致）",
+    "multistart": "5 起点全收敛同一谷，参数一致到 7 位有效数字（全局唯一解）",
+    "peak_dominance": "amp=0.0566 vs 峰位处幂律底 A*q0^-dm=0.0028（峰贡献 20 倍）",
+    "rejected_models": "broad_peak 49.3 / teubner_strey 106.2 / hardcarbon_ts 209.6 / fuzzy_sphere_extended sq 533.9 全部结构性失配"
+  },
+  "notes": "回归验收判据：chi2_dof 与 params 逐位一致（tier1 硬判据）；q0/sigma 允许 1e-12 相对 ULP 容差（tier2，lessons 10-07 环境噪声指纹）。重建路径：saxs_fit(model='phase_separation_bp', mode='gauss', path=<anchor data>, q_unit='A^-1', fmt=<上述卡>, qmin=0.075, qmax=0.9)"
+}

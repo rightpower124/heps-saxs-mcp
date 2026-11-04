@@ -1,0 +1,8 @@
+# HEPS SAXS MCP 服务器依赖（Python >= 3.10）
+# 注意：mcp 必须 <2（2.x 起 FastMCP 改名 MCPServer、API 不兼容，见 server.py）
+mcp>=1.0,<2
+numpy
+scipy
+matplotlib
+# 可选：sasmodels（官方基础形状桥接通道，M2.5-4；未安装时 4 个 external 模型自动缺席并上报原因）
+# sasmodels>=1.1

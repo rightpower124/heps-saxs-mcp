@@ -1,0 +1,79 @@
+{
+  "name": "alcu_precipitate",
+  "version": "0.1.0",
+  "status": "validated",
+  "description": "Al-Cu 合金盘状析出相（Tsao 2013 Eq.1）：Porod 杂质项 + 圆柱盘形式因子取向平均 + 常数背景；mode main = Model III（S(Q)≈1，无结构峰数据）/ mode model1 = Model I（×PY 硬球结构因子，GPZ 类结构峰数据）",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "Tsao C.-S., Huang E.-W., Wen M.-H. et al., Phase transformation and precipitation of an Al-Cu alloy during non-isothermal heating studied by in situ small-angle and wide-angle scattering, J. Alloys Compd. 579 (2013) 138-146, DOI 10.1016/j.jallcom.2013.04.201",
+    "ported_from": "文献 Model I = Eq.(3)（含 PY 硬球 S(Q)，公式移植自 sasmodels 1.1.0 hardsphere.c）；Model III = Eq.(5)（= Eq.(3) 取 S(Q)≈1）；形式因子核 = Eq.(1)",
+    "local_reference": "new_model_for_M3/（论文 PDF + 补充材料 mmc1.doc）"
+  },
+  "modes": {
+    "main": {
+      "sample": "Al-Cu 合金盘状析出相（GP 区 / θ'' / θ' 前驱体）",
+      "plot_title": "Al-Cu plate-like precipitate (Model III)",
+      "fit_label": "fit: A*Q^-4 + s*P_disk(R,t) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "model1": {
+      "sample": "Al-Cu 合金盘状析出相，带粒子间空间关联结构峰（GPZ 类，文献 Model I 处理）",
+      "plot_title": "Al-Cu plate-like precipitate (Model I)",
+      "fit_label": "fit: A*Q^-4 + s*P_disk*S_PY(r_hs,eta) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "M3-261001 能力自发现：Agent 经 saxs_list_models 读取本块编排该模型的分析流程；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.07, 3.4],
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='alcu_precipitate', mode=按数据形态选：'main'=S(Q)≈1 / 'model1'=含 PY 硬球 S(Q)；path, q_unit=与用户确认值)",
+      "make_plots（两联图）",
+      "saxs_report（四件套交付）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "质疑最优解全局性时（R-t 形态简并排查；model1 另查 r_hs/eta 全局性）"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时"},
+      {"tool": "saxs_diag_param_scan", "when": "量化简并宽度 / 窗口位置依赖时（model1 重点扫 t / r_hs / eta）"}
+    ]
+  },
+  "labels": {
+    "A": ["Porod 幅度（大粒子 Q⁻⁴ 项）", ""],
+    "s": ["盘散射缩放 φ·Δρ²", ""],
+    "R": ["盘半径", "nm"],
+    "t": ["盘厚度", "nm"],
+    "r_hs": ["硬球半径（PY 结构因子）", "nm"],
+    "eta": ["硬球体积分数（PY 结构因子）", ""],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Tsao C.-S. et al., J. Alloys Compd. 579 (2013) 138-146, DOI 10.1016/j.jallcom.2013.04.201",
+    "si": "补充材料 mmc1.doc（Figure S3：A1h 样品 θ'' 相 Model III 拟合示例；本地副本 new_model_for_M3/）",
+    "assumptions": [
+      "① S(Q)≈1：析出相空间分布无短程有序结构峰（文献 A1h 样品同款处理；本站 T4 数据实测无 0.1/0.16 Å⁻¹ 结构峰）",
+      "② 直径单分布：忽略直径多分散（文献原文理由：避免结构因子过参数化与直径分布的错误估计）",
+      "③ Δρ 统一取 1.05×10⁻⁵ Å⁻²（θ′ 值；文献对全部相统一使用以简化相对体积分数比较）",
+      "④ 常数背景 B 为站内扩展：文献数据已绝对标定并扣背景，本站 a.u. 强度数据以 B 吸收噪声平台",
+      "⑤ 强度未绝对标定 → φ=s/Δρ² 为表观相对体积分数（a.u. 标度归一量），R/t 为标度无关形状参数可稳健比较"
+    ]
+  },
+  "acceptance_baseline": {
+    "note": "L2 对照锚点（文献 Table 1/2 室温端）+ 本站首测（2026-10-01，runs/M3_alcu_T4/）：文献锚点为对照目标，本站值为无权重拟合结果",
+    "paper_Table1_NA_GPZ_RT": { "R_nm": 0.82, "t_nm": 0.24, "phi_rel": 0.0020, "model": "I" },
+    "paper_Table2_A1h_theta2_RT": { "R_nm": 8.54, "t_nm": 1.46, "phi_rel": 0.065, "model": "III" },
+    "station_T4_2days": { "chi2_dof": 0.108, "A": 0.005043, "q_window_nm": [0.07, 3.4], "weighting": "unweighted" },
+    "station_T4_48days": { "chi2_dof": 0.124, "A": 0.005737, "q_window_nm": [0.07, 3.4], "weighting": "unweighted" },
+    "station_T4_48days_model1": { "chi2_dof": 0.115666, "A": 0.005752, "r_hs_nm": 2.114388, "eta": 0.277673, "q_window_nm": [0.07, 3.4], "weighting": "unweighted", "f_test_vs_model3": { "F": 21.21, "p_value": 1.32e-9 }, "note": "Model I 轮 2026-10-01；r_hs≈2.1 nm 稳健（四重证据链）、eta 半稳健、R/t 条件值" },
+    "station_T4_2days_model1": { "chi2_dof": 0.066573, "A": 0.005407, "r_hs_nm": 42.5589, "eta": 0.448769, "t_nm": 19.0216, "q_window_nm": [0.07, 3.4], "weighting": "unweighted", "note": "Model I 重拟合轮 2026-10-01（用户裁决拟合误差优先）：INIT1 修订后单起点收敛 0.204→0.0666 无撞界；物理参数按 multistart 证据链降级条件值（大厚度盘借形解，r_hs 与 48days 异族，宽浅多解盆），仅承载拟合误差，不作物理结论" }
+  },
+  "validation": {
+    "L1_synthetic": "PASS (2026-10-01, test_synthetic.py: Model III 三用例 + Model I 两用例(GPZ中心/撞界t) 全过, chi2/dof 1.126/0.991/0.973/0.938/0.931, 多起点一致, 参数恢复<=1.8sigma)",
+    "L2_physical": "部分 (2026-10-01, MCP 对话实测双样品 T4-2days/T4-48days 全窗 [0.07,3.4] nm⁻¹ 无权重拟合: 形态 PASS——Model III 容纳 q⁻⁴→平台形态，48d 盘 q⁻² 分量图上可见且 Porod 幅度 A 较 48h 增强 14%，与 θ″ 盘析出随时效增强一致; 数值不可辨识——R/t 三重证据链不通过: t-scan χ²(t) 无内部极小/平底贴零 + multistart 唯一解反物理 (t=20.2 nm vs 文献 θ″ 1.46 nm) + 窄窗对照 t 0.05↔9.13 窗口依赖强、B 漂移 0.35→0.72, R/t 不作物理结论; 根因: 无权重+幂律分量共线+单分散模型对多分散体系过强; 证据链 runs/M3_alcu_T4/ 报告 sample_note)；【Model I 轮 2026-10-01】48days 结构峰显著（F=21.2/p=1.3e-9 + multistart 5/6 全局一致 + r_hs 扫描单极小且 η→0 精确回到 Model III 嵌套自检 + 窄窗 r_hs 2.11→2.17 稳定）→ r_hs≈2.1 nm 稳健、eta≈0.28-0.36 半稳健、q_peak≈1.5 nm⁻¹（条件于 Model I 框架），R/t 仍不可辨识；【Model I 重拟合轮 2026-10-01，用户裁决拟合误差优先】2days 经 INIT1 起点修订（multistart 实证）收敛 0.204→0.0666（中低 q 残差平坦），物理参数为大厚度盘借形解、按证据链降级条件值仅承载拟合误差；48days 同起点无回归（0.115666068 尾数级一致）；证据链 runs/M3_alcu_T4_model1/ 报告 sample_note)",
+    "human_review": "PASS（2026-10-01 用户终审签字：48days 样品 Model I 拟合极好、参考文献已被充分复现，审核通过入库；2days 样品裁决为不适用本文献模型族（残差系统结构+借形解），放弃强行拟合、报告中已明确声明并建议另寻文献——样品-文献适配性差异属正常现象，不作模型缺陷记录）"
+  }
+}

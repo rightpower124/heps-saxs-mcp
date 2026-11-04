@@ -1,0 +1,84 @@
+{
+  "name": "phase_separation_2seg",
+  "version": "0.1.0",
+  "status": "candidate",
+  "description": "相分离全带宽模型（末端迭代版）：平滑转折双幂律底（dm1→dm2，logistic 权重）+ 界面 Porod×Ruland 修正 + 广延峰 + 背景；dm2>4 段 = 界面弥散主导（Ruland 等效表达）；σ_int = 界面层厚度直接产出；mode gauss/lorentz 峰形对拍；report 自带「算法与公式」节",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "方法学锚：①Ruland W., J. Appl. Cryst. 4 (1971) 70（弥散界面修正；dm2>4 段物理等价）；②Hammouda B.F. (NIST) broad peak model（峰形）；③Teubner & Strey 1987（峰物理语义）；④双幂律 crossover 聚合物体系通用形态（logistic 平滑为站内数值实现）",
+    "ported_from": "phenomenological 组合模型（模型赛马 M4 定形）：立项依据 = 2026-10-22 末端 +40% 上翘取证——5 候选同窗对拍（M0 ruland 5.439 / M1 gen-ruland 5.216 / M2 双 Ruland 5.454 / M3 +OZ 尾 3.919 / M4 两段幂律 1.226），底形两段化是唯一同时改善峰窗与高 q 尾的方案",
+    "local_reference": "数据与文献归档 test_data/phase_separation_bp/（1.dat + Nat. Mater. 2022 主文 + SI + 数据说明 docx）"
+  },
+  "modes": {
+    "gauss": {
+      "sample": "相分离/两相体系样品（全带宽：关联峰 + 界面弥散衰减；首测锚 Xeuss 3.0 Cu 靶未扣背景原始数据）",
+      "plot_title": "phase separation 2-segment power law (gauss)",
+      "fit_label": "fit: 2-seg PL + Porod*Ruland + gauss peak + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "lorentz": {
+      "sample": "相分离/两相体系样品（Lorentz 峰形对拍）",
+      "plot_title": "phase separation 2-segment power law (lorentz)",
+      "fit_label": "fit: 2-seg PL + Porod*Ruland + lorentz peak + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "2026-10-22 末端迭代立项（用户裁决）：压制高 q 尾 +40% 上翘；通用纪律见 agent_prompts/saxs_workflow.md；报告自带「算法与公式」节",
+    "q_window_nm": [0.075, 1.3],
+    "q_window_note": "下界=束挡截止后首点；上界=1.30 nm^-1（S/I≤10% 噪声底判据定版，1.30-1.456 区噪声主导舍去；qmax=1.2 会致 σ_int 撞下界崩坏——三档对拍证据链见 runs/20261022_fullband/）",
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='phase_separation_2seg', mode='gauss', path, q_unit=与用户确认值, qmin=束挡截止后, qmax=1.3)",
+      "saxs_fit(model='phase_separation_2seg', mode='lorentz', 同窗) → 峰形对拍",
+      "saxs_diag_multistart（dm2/A_int/σ_int 共线 + 峰参数取证；起点传完整参数字典）",
+      "saxs_diag_param_scan(param='sigma_int')（σ_int 简并宽度量化）",
+      "make_plots + saxs_report（择优模式四件套交付；报告含算法与公式节）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "每样品必备（dm2-A_int-σ_int 共线 + 峰浅简并）"},
+      {"tool": "saxs_diag_param_scan", "when": "σ_int 为最终结论时必备（网格覆盖 [0.1, 10] nm）"},
+      {"tool": "saxs_diag_relax_bound", "when": "dm2/w_br/σ_int 撞界时"}
+    ]
+  },
+  "labels": {
+    "A_c": ["底形幅度", ""],
+    "dm1": ["低 q 幂律指数（链/无规两相形态）", ""],
+    "dm2": ["高 q 幂律指数（>4 = 界面弥散主导段）", ""],
+    "q_br": ["双幂律转折位置", "nm^-1"],
+    "w_br": ["logistic 转折宽度", "nm^-1"],
+    "A_int": ["界面 Porod 项幅度", ""],
+    "sigma_int": ["界面层厚度（Ruland 修正因子）", "nm"],
+    "amp": ["峰幅度", ""],
+    "q0": ["峰位（关联峰顶）", "nm^-1"],
+    "sigma": ["峰宽（gauss 标准差）", "nm^-1"],
+    "w": ["峰宽（lorentz 半高半宽）", "nm^-1"],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Ruland 1971（界面修正）+ Hammouda broad_peak（峰形）+ Teubner & Strey 1987（峰物理）+ 双幂律 crossover 通用形态",
+    "si": "无官方 SI（组合模型）；立项实证 runs/20261022_fullband/（模型赛马 5 候选证据链）",
+    "method": "I(q) = A_c·q^(−dm_eff(q)) + A_int·q^(−4)·exp(−σ_int²q²) + amp·Peak + B；dm_eff = dm1(1−w)+dm2·w，w = 1/(1+exp(−(q−q_br)/w_br))；派生 d=2π/q0、FWHM、σ_int 即界面层厚度",
+    "assumptions": [
+      "① phenomenological 组合模型：双幂律转折用 logistic 平滑（数值稳定无奇异），峰形标准对称 gauss/lorentz",
+      "② **dm2-A_int-σ_int 共线披露**：高 q 段三者共同决定衰减形状，机制分配（底形两段化 vs 界面指数修正）存在互补，σ_int 条件值判读并以 param_scan/multistart 取证",
+      "③ dm2>4 的物理解读 = 界面弥散主导（Ruland 1971 等效表达），不是表面分形维数",
+      "④ q_br 与 1/σ_int 的自洽性为机制分配诊断量（首测 q_br≈0.94 与 1/σ_int≈0.19 nm⁻¹ 量级不同——界面项承担中 q 段、双幂律承担高 q 段，机制分工披露）",
+      "⑤ 双模式峰形对拍 + 与 M0 ruland 的 χ²/残差结构对拍证据链（模型赛马）"
+    ]
+  },
+  "smoke_truth": {
+    "note": "冒烟真值覆盖：dm1=1/dm2=5 双段形态 + 峰主导（amp=20），验证 dm1/dm2/q_br/w_br/σ_int/峰参数全可恢复；q_br=0.9 与 σ_int=5.15 使转折在冒烟网格内显效",
+    "gauss": {"A_c": 0.5, "dm1": 1.0, "dm2": 5.0, "q_br": 0.9, "w_br": 0.15, "A_int": 0.0008, "sigma_int": 5.15, "amp": 20.0, "q0": 0.6, "sigma": 0.5, "B": 0.001},
+    "lorentz": {"A_c": 0.5, "dm1": 1.0, "dm2": 5.0, "q_br": 0.9, "w_br": 0.15, "A_int": 0.0008, "sigma_int": 5.15, "amp": 20.0, "q0": 0.6, "w": 0.5, "B": 0.001}
+  },
+  "validation": {
+    "L1_synthetic": "PENDING",
+    "L2_physical": "PENDING",
+    "human_review": "PENDING"
+  }
+}

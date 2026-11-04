@@ -1,0 +1,118 @@
+{
+  "tool": "ruland_l1_check v0.1.0",
+  "n_cases": 9,
+  "n_fail": 0,
+  "all_pass": true,
+  "cases": [
+    {
+      "case": "M1_base(L35,B.10,n.5%)",
+      "L_true": 35.0,
+      "B_eq_true": 0.1,
+      "B_eq_fit": 0.10047169156975858,
+      "dev_pct": 0.47169156975856996,
+      "intercept_rel_dev_pct": -0.3036999946224528,
+      "r2": 0.9999893664591645,
+      "n_flags": 0,
+      "flags": [],
+      "pass": true,
+      "phi_ref": 36.75,
+      "seed": 1
+    },
+    {
+      "case": "M2_noise2pct_drift2deg",
+      "L_true": 35.0,
+      "B_eq_true": 0.1,
+      "B_eq_fit": 0.10084194558158976,
+      "dev_pct": 0.8419455815897647,
+      "intercept_rel_dev_pct": -4.24192399954052,
+      "r2": 0.9997460989437276,
+      "n_flags": 0,
+      "flags": [],
+      "pass": true,
+      "phi_ref": 37.00000000000001,
+      "seed": 2
+    },
+    {
+      "case": "M3_short_L20_narrowB05",
+      "L_true": 20.0,
+      "B_eq_true": 0.05,
+      "B_eq_fit": 0.05051666579897109,
+      "dev_pct": 1.0333315979421887,
+      "intercept_rel_dev_pct": 0.7429757271165016,
+      "r2": 0.9986433161822194,
+      "n_flags": 0,
+      "flags": [],
+      "pass": true,
+      "phi_ref": 36.999999999999986,
+      "seed": 3
+    },
+    {
+      "case": "M4_long_L80_wideB20",
+      "L_true": 80.0,
+      "B_eq_true": 0.2,
+      "B_eq_fit": 0.20039869361992851,
+      "dev_pct": 0.19934680996425147,
+      "intercept_rel_dev_pct": -30.22842143417961,
+      "r2": 0.999776280151304,
+      "n_flags": 0,
+      "flags": [],
+      "pass": true,
+      "phi_ref": 37.500000000000014,
+      "seed": 4
+    },
+    {
+      "case": "M5_drift3deg",
+      "L_true": 35.0,
+      "B_eq_true": 0.1,
+      "B_eq_fit": 0.10003514220134091,
+      "dev_pct": 0.03514220134090973,
+      "intercept_rel_dev_pct": 5.315212538895242,
+      "r2": 0.9999121672030352,
+      "n_flags": 1,
+      "flags": [
+        "residual_curvature(F_p=0.0019<0.05；线性区选取不当/双 L 群体/背景残留——请复核 q 窗口)"
+      ],
+      "pass": true,
+      "phi_ref": 37.49999999999999,
+      "seed": 5
+    },
+    {
+      "case": "M6_mid(L50,B.15,n2%)",
+      "L_true": 50.0,
+      "B_eq_true": 0.15,
+      "B_eq_fit": 0.15054764561916487,
+      "dev_pct": 0.3650970794432551,
+      "intercept_rel_dev_pct": 0.8741547011693385,
+      "r2": 0.9975220097365233,
+      "n_flags": 0,
+      "flags": [],
+      "pass": true,
+      "phi_ref": 37.00000000000001,
+      "seed": 6
+    },
+    {
+      "case": "gap_mask_propagation",
+      "n_filled_col10": 5,
+      "filled_frac": 0.17857142857142858,
+      "B_eq_fit": 0.10030758337423121,
+      "dev_pct": 0.30758337423120174,
+      "pass": true
+    },
+    {
+      "case": "lorentz_nongaussian",
+      "B_eq_fit": 0.08089549366848743,
+      "dev_pct": -19.10450633151257,
+      "r2": 0.999272768287588,
+      "pass": true,
+      "note": "高斯假设下非高斯峰形的系统偏差记录值（条件值口径，论文 ref 11 非高斯卷积宽度关系的适用场景）"
+    },
+    {
+      "case": "curved_ruland_plot",
+      "r2": 0.9990595078765179,
+      "flags": [
+        "residual_curvature(F_p=0.0019<0.05；线性区选取不当/双 L 群体/背景残留——请复核 q 窗口)"
+      ],
+      "pass": true
+    }
+  ]
+}

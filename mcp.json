@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "heps-saxs": {
+      "command": "PYTHON_PATH_PLACEHOLDER",
+      "args": ["REPO_ROOT_PLACEHOLDER/saxs_mcp/server.py"],
+      "env": {
+        "START_MCP_TIMEOUT_MS": "60000",
+        "SAXSAGENT_ENV": "CONDA_ENV_PLACEHOLDER"
+      }
+    }
+  }
+}

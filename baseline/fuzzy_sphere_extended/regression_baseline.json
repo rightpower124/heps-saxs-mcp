@@ -1,0 +1,51 @@
+{
+  "schema": "heps-saxs/regression-baseline-v0",
+  "purpose": "fuzzy_sphere_extended 0.1.0 入库回归基准（第 5 号模型）。L2 物理复现主锚（sq 模式全窗拟合）的数值快照。后续引擎/工具重构后，用同一数据同窗拟合，关键数值必须与本文件逐位一致；若确需改变数值，先修订本文件并在设计文档记录原因。",
+  "created": "2026-10-09",
+  "source": "runs/M4_fuzzy_sphere_extended/sq/sq_result.json（L2 主锚，四门验证 PASS 后入库；证据链见 runs/M4_fuzzy_sphere_extended/入库评估小结.md）",
+  "tolerance_rule": "逐位一致（字符串化后完全相等）；epsilon 仅允许 JSON 序列化的浮点表示差异",
+  "provenance": {
+    "data_file": "test_data/fuzzy_sphere/ICR_0_20_init_1D.dat",
+    "data_file_original": "临时数据/Neubert2026_DataforPub/HexaCyanoferrate/ICRDep/P(NIPAM-co-MAPTAC) 10 g_L in 0.1 M KCl + K3[Fe(CN)6] ICR 0_20_init_1D.dat（Neubert 2026 Fig 3 20 °C 纯微凝胶曲线对应数据）",
+    "q_unit_input": "nm^-1",
+    "qmin": 0.03,
+    "qmax": 2.148,
+    "n_points": 499,
+    "fitting": "scipy least_squares trf, x_scale=jac",
+    "fmt": {"encoding": "utf-8-sig", "delimiter": "comma", "skip_rows": 4, "col_q": 0, "col_i": 1, "col_s": 2, "q_unit": "nm^-1"}
+  },
+  "mode": "sq",
+  "chi2_dof": 0.960580642425043,
+  "dof": 489,
+  "at_bound": ["B"],
+  "params": {
+    "A": 200.74836098870145,
+    "B": 6.656742540693057e-40,
+    "R": 2.474192308566419,
+    "eta": 0.1315038221127336,
+    "flory_nu": 0.3729738851332788,
+    "r_hs": 35.548760265521665,
+    "rel_amp": 0.15593400675301658,
+    "rg": 50.625794539180845,
+    "sigma_fuzzy": 13.960479161339649,
+    "xi": 5.935739650488452
+  },
+  "perr": {
+    "A": 91.38845073819392,
+    "B": 0.029026510739853614,
+    "R": 6681.708093594876,
+    "eta": 0.015333373392262655,
+    "flory_nu": 0.02790745411356729,
+    "r_hs": 1.764225907182981,
+    "rel_amp": 0.13750255082885002,
+    "rg": 207.2443633900056,
+    "sigma_fuzzy": 297.8510210355108,
+    "xi": 2.0297288817346235
+  },
+  "grade": {
+    "A": "归一量", "B": "条件值", "R": "条件值", "eta": "稳健",
+    "flory_nu": "稳健", "r_hs": "稳健", "rel_amp": "稳健",
+    "rg": "条件值", "sigma_fuzzy": "条件值", "xi": "稳健"
+  },
+  "notes": "R/σ_fuzzy/rg 的 perr 爆表（R-σ 简并谷，单分散引擎 vs 作者 0.4 nm 多分散口径差）非引擎数值漂移，分级为条件值属预期行为；回归核验只对 params/perr/chi2_dof/dof 逐位，不核对 grade（分级规则演进不回溯基准）。"
+}

@@ -1,0 +1,81 @@
+{
+  "name": "phase_separation_ruland",
+  "version": "0.1.0",
+  "status": "candidate",
+  "description": "相分离全带宽模型（方案 B，Ruland 1971 弥散界面修正）：链形态幂律 + 界面 Porod×Ruland 修正（A_int·q^-4·exp(−σ_int²q²)）+ 广延峰 + 背景，三项叠加；σ_int = 界面层厚度直接产出（任务最终目标物理量）；mode gauss/lorentz 峰形对拍；report 自带「算法与公式」节",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "方法学正源：①Ruland W., J. Appl. Cryst. 4 (1971) 70（弥散界面 Porod 偏离修正，exp(−σ²q²) 因子）；②Koberstein J.T., Morra B., Stein R.S., J. Appl. Cryst. 13 (1980) 34（聚合物体系应用范式）；③Hammouda B.F. (NIST) broad peak model（峰形）；④Teubner & Strey 1987（相分离峰物理语义）",
+    "ported_from": "phenomenological 组合模型（三项叠加）：底形 = A_c·q^(−dm) + A_int·q^(−4)·exp(−σ_int²q²)（链形态 + 界面 Porod×Ruland 修正）；立项依据 = 2026-10-22 相分离 1.dat 全带宽实测（窗内 dm≈2.34、高 q ≈q^−2.6，两项底形的综合等效指数滑动行为相容），且 σ_int 直接回答文件夹主题「界面层厚度」",
+    "local_reference": "数据与文献归档 test_data/phase_separation_bp/（1.dat + Nat. Mater. 2022 主文 + SI + 数据说明 docx）；Ruland 1971 原文待归档（方法学锚为经典文献引用）"
+  },
+  "modes": {
+    "gauss": {
+      "sample": "相分离/两相体系样品（全带宽：关联峰 + 界面 Porod 弥散修正；首测锚 Xeuss 3.0 Cu 靶未扣背景原始数据）",
+      "plot_title": "phase separation Ruland interface (gauss)",
+      "fit_label": "fit: chain + Porod*Ruland + gauss peak + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "lorentz": {
+      "sample": "相分离/两相体系样品（Lorentz 峰形对拍）",
+      "plot_title": "phase separation Ruland interface (lorentz)",
+      "fit_label": "fit: chain + Porod*Ruland + lorentz peak + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "2026-10-22 方案 B 立项（用户裁决 A/B 都试）：全带宽拟合 + 界面层厚度 σ_int 直接产出；通用纪律见 agent_prompts/saxs_workflow.md；报告自带「算法与公式」节（report.algo 钩子）",
+    "q_window_nm": [0.075, 1.456],
+    "q_window_note": "下界=束挡截止后首点；上界=数据最大 q（σ_int 需高 q 数据 q≳1/σ_int 强约束，窗必须延伸到数据末端；低 q 直通光段 <束挡截止永久舍去）",
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='phase_separation_ruland', mode='gauss', path, q_unit=与用户确认值, qmin=束挡截止后, qmax=数据最大q)",
+      "saxs_fit(model='phase_separation_ruland', mode='lorentz', 同窗) → 峰形对拍",
+      "saxs_diag_multistart（σ_int/dm 共线 + 峰参数取证；起点传完整参数字典）",
+      "saxs_diag_param_scan(param='sigma_int')（界面层厚度简并宽度量化——结论分级依据）",
+      "make_plots + saxs_report（择优模式四件套交付；报告含算法与公式节）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "每样品必备（两幂律共线 + 峰浅简并）"},
+      {"tool": "saxs_diag_param_scan", "when": "σ_int 为最终结论时必备（简并宽度量化；网格覆盖 [0.1, 5] nm 量级）"},
+      {"tool": "saxs_diag_relax_bound", "when": "σ_int/dm 撞界时"}
+    ]
+  },
+  "labels": {
+    "A_c": ["链形态幂律幅度", ""],
+    "dm": ["链形态幂律指数", ""],
+    "A_int": ["界面 Porod 项幅度（∝ 界面比表面积 × Δρ²）", ""],
+    "sigma_int": ["界面层厚度（Ruland 修正因子）", "nm"],
+    "amp": ["峰幅度", ""],
+    "q0": ["峰位（关联峰顶）", "nm^-1"],
+    "sigma": ["峰宽（gauss 标准差）", "nm^-1"],
+    "w": ["峰宽（lorentz 半高半宽）", "nm^-1"],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Ruland W., J. Appl. Cryst. 4 (1971) 70（弥散界面修正正源）；Koberstein/Morra/Stein 1980（应用范式）；Hammouda broad_peak（峰形）；Teubner & Strey 1987（峰物理语义）",
+    "si": "无官方 SI（组合模型）；立项实证记录 runs/20261022_phase_separation_full/",
+    "method": "I(q) = A_c·q^(−dm) + A_int·q^(−4)·exp(−σ_int²q²) + amp·Peak(q; q0, 宽) + B；Peak_gauss = exp(−(q−q0)²/2σ²)、Peak_lorentz = 1/(1+((q−q0)/w)²)；派生 d=2π/q0、FWHM、σ_int 即界面层厚度",
+    "assumptions": [
+      "① phenomenological 三项叠加：界面修正采用 Ruland 1971 exp(−σ²q²) 单参数高斯过渡层近似（原文献还有更一般的积分形式，本插件取解析可积形式）",
+      "② **两幂律共线披露**：窗内 q<1/σ_int 时 exp→1，链项与界面项仅靠指数差（dm vs 4）区分——dm 与 4 差距不足时简并，multistart + param_scan(σ_int) 取证必备",
+      "③ **σ_int 高 q 依赖披露**：σ_int 主要由 q≳1/σ_int 段约束，拟合窗必须延伸到数据最大 q；数据 q 范围不足时 σ_int 降条件值披露",
+      "④ 峰浅简并披露（phase_separation_bp 同款）；B 为背景/未扣背景残余吸收项",
+      "⑤ 双模式峰形对拍 + 与方案 A（phase_separation_exp stretched-exp）构成高 q 衰减机制对照——以 χ² + 残差结构 + σ_int 可辨识性三方裁决"
+    ]
+  },
+  "smoke_truth": {
+    "note": "冒烟真值覆盖：链项与界面项等幅（各 0.5）+ 峰主导（amp=20），验证 A_c/dm/A_int/σ_int/峰参数全可恢复；σ_int=0.8 使转折 q*=1.25 在冒烟网格 [0.3,4.4] 内显效",
+    "gauss": {"A_c": 0.5, "dm": 2.5, "A_int": 0.5, "sigma_int": 0.8, "amp": 20.0, "q0": 0.6, "sigma": 0.5, "B": 0.001},
+    "lorentz": {"A_c": 0.5, "dm": 2.5, "A_int": 0.5, "sigma_int": 0.8, "amp": 20.0, "q0": 0.6, "w": 0.5, "B": 0.001}
+  },
+  "validation": {
+    "L1_synthetic": "PENDING",
+    "L2_physical": "PENDING",
+    "human_review": "PENDING"
+  }
+}

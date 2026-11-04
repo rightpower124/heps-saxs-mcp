@@ -1,0 +1,80 @@
+{
+  "name": "gel_network",
+  "version": "0.1.0",
+  "status": "validated",
+  "description": "凝胶/聚合物网络相关长度模型（Wisotzki 2017 Eq.1/Eq.3）：mode main = correlation length model（I(0)/(1+(ξq)^m)+B 全 q 区，派生 qc=1/ξ 与 mesh=2πξ 网目尺寸）/ mode porod = 质量分形幂律（I=A·q^-dm，中段局部指数）；OZ-DB（Eq.2）文献自证无物理意义不入库",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "Wisotzki E.I., Tempesti P., Fratini E., Mayr S.G., Influence of high energy electron irradiation on the network structure of gelatin hydrogels as investigated by small-angle X-ray scattering (SAXS), Phys. Chem. Chem. Phys. 19 (2017) 12064-12074, DOI 10.1039/c7cp00195a",
+    "ported_from": "文献 Eq.(1) correlation length model（main 模式）与 Eq.(3) Porod plot 幂律（porod 模式）；mesh=2π/qc 口径自文献 Mesh size 节（qc 由拟合获得，数值链验证 ξ=3.0→18.8 nm vs 文献 17.5±0.5）",
+    "local_reference": "test_data/gel_network/（论文 PDF c7cp00195a.pdf + 补充材料 c7cp00195a1.pdf + 回归基准数据 pam/cncs 两个 dat，2026-10-02 入库当天归档；原 new_model/ 已清空）"
+  },
+  "modes": {
+    "main": {
+      "sample": "凝胶/聚合物网络（物理缠结或化学交联；文献锚点为明胶水凝胶物理/辐照系列；本站样品体系按中性措辞处理）",
+      "plot_title": "gel network correlation length model (Eq.1)",
+      "fit_label": "fit: I0/(1+(xi*q)^m) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "porod": {
+      "sample": "凝胶/聚合物网络中段自相似幂律区间（质量分形维数，文献 Porod plot 窗 0.3–2 nm⁻¹）",
+      "plot_title": "gel network mass fractal power law (Eq.3)",
+      "fit_label": "fit: A*q^(-dm)",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "M3-261002 能力自发现：Agent 经 saxs_list_models 读取本块编排该模型的分析流程；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.07, 2.6],
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='gel_network', mode='main'（全 q 区 correlation length model，文献同款）；path, q_unit=与用户确认值)",
+      "make_plots（两联图）",
+      "saxs_report（四件套交付）",
+      "saxs_fit(model='gel_network', mode='porod'，q_window=[0.3,2.0]（文献 Porod plot 同款窗）；中段幂律分形维数 dm)",
+      "make_plots + saxs_report（porod 模式四件套）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "质疑最优解全局性时（A-ξ-m 低 q 无平台场景共线排查；建议每样品例行）"},
+      {"tool": "saxs_diag_param_scan", "when": "量化 ξ/m（main）或 dm/窗口位置（porod）简并宽度时"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时"}
+    ]
+  },
+  "labels": {
+    "A": ["q→0 外推强度 I(0)（main）/ 幂律幅度（porod）", ""],
+    "xi": ["相关长度 ξ", "nm"],
+    "m": ["Porod 指数（局部链形态）", ""],
+    "dm": ["质量分形维数（中段局部幂律）", ""],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Wisotzki E.I. et al., Phys. Chem. Chem. Phys. 19 (2017) 12064-12074, DOI 10.1039/c7cp00195a",
+    "si": "补充材料 c7cp00195a1.pdf（S1-S4 拟合展示 / S5 I(0) 对照 / S6-S7 Porod plot；本地副本归档 test_data/gel_network/）",
+    "assumptions": [
+      "① eqn(1) 为经验模型，不含结构因子项：文献对 10 wt% 明胶低 q（<0.2 nm⁻¹）misfit 同款归因（结构因子未计入）；低 q 存在强上翘/结构峰的样品按 misfit 披露",
+      "② **A-ξ-m 共线披露**：数据低 q 无平台（未及 q << 1/ξ）时 I ≈ (A/ξ^m)·q^-m 仅乘积可辨——A 单独值降级条件值，形态结论以拟合曲线+残差为准",
+      "③ B 为站内扩展项：文献数据已绝对标定并扣背景，本站 a.u. 强度以 B 吸收噪声平台",
+      "④ mesh = 2π/qc、qc = 1/ξ 口径：qc 为 correlation length model 拟合导出的 crossover/肩部位置（I=I(0)/2），数值链经文献验证（ξ=3.0→18.8 nm ≈ 文献 17.5±0.5；ξ=4.0→25.1 ≈ 26.0±0.5）",
+      "⑤ OZ-DB（文献 Eq.2，Picot-Benoit 低 q 上翘叠加项）不入库：文献自证对辐照凝胶 ξ 与 ε 同量级、无物理意义，6 参数过拟合风险高",
+      "⑥ porod 模式为窗口内局部幂律（文献同款两参数，无背景项），dm 与 main 模式全局等效指数 m 数值不必相等；窗口内应远离噪声底"
+    ]
+  },
+  "acceptance_baseline": {
+    "note": "L2 对照锚点（文献数值域）+ 本站首测（2026-10-02，runs/M3_gel_network/，已回填）：文献锚点为对照目标，本站值为加权拟合结果（数据 σ 列参与）",
+    "paper_phys_gels": { "xi_nm": "3.0±0.5（≥4 wt%）至 4.0±0.5（2 wt%）", "m": "1.79-1.84±0.20", "dm": "1.1-1.44±0.1（随浓度降至棒状）", "mesh_nm": "17.5-26.0±0.5" },
+    "paper_irradiated_gels": { "xi_nm": "辐照批次系统性更大（batch effect）", "m": "1.69±0.2 → 2.55±0.2（0→80 kGy）", "dm": "1.43±0.1 → 2.31±0.1", "mesh_nm": "42.0→22.0±0.5（10→80 kGy）" },
+    "station_pam_main": { "chi2_dof": 0.6294, "xi_nm": 0.889132, "m": 1.897856, "mesh_nm": 5.5866, "q_window_nm": [0.07, 2.6], "weighting": "weighted (σ列)", "note": "2026-10-02 首测；multistart 6 起点唯一解、无撞界；m 落文献物理凝胶锚点域 1.79–1.84±0.20；ξ=0.89 nm 短于文献 3–4 nm（文献为 10–40 wt% 明胶水凝胶浓度系列，本站样品体系中性处理，数值仅作形态对照不作体系推断）" },
+    "station_cncs_main": { "chi2_dof": 5.4370, "xi_nm": 9.658922, "m": 2.530598, "mesh_nm": 60.6888, "q_window_nm": [0.07, 2.6], "weighting": "weighted (σ列)", "note": "2026-10-02 首测；multistart 6 起点唯一解、无撞界；χ²/dof>3 经诊断链（截尾对照 χ² 反升 6.02 + 相对残差平坦 + multistart 唯一）判 σ 列系统性低估而非模型形态缺陷，ξ/m 稳健；A 为外推条件值（低 q 无平台，见假设②）；m=2.53 与文献辐照高剂量端 2.55±0.2 吻合" },
+    "station_pam_porod": { "chi2_dof": 3.0655, "dm": 0.605757, "q_window_nm": [0.3, 2.0], "weighting": "weighted (σ列)", "note": "2026-10-02 文献窗拟合；dm<1 反物理且窗口依赖强（[0.7,1.5]→0.73、[1.5,2.5]→0.91）→ pam 无自相似幂律区、文献窗不适配，dm 降条件值；与 main 模式 m=1.9（局域涨落主导）自洽" },
+    "station_cncs_porod": { "chi2_dof": 24.6607, "dm": 2.143256, "q_window_nm": [0.3, 2.0], "weighting": "weighted (σ列)", "note": "2026-10-02 文献窗拟合；χ²/dof=24.7 与 cncs main 同因（σ 列系统性低估）判定；**三窗对照证据链（2026-10-02 补跑，A0 窄窗兜底修复后）**：[0.3,0.7] dm=2.489±0.008（χ²/dof=0.93）、[0.7,1.5] dm=1.697±0.017（2.13）、[1.5,2.5] dm=1.041±0.030（0.60）——dm 随窗口单调下滑 2.49→1.70→1.04，cncs 无自相似幂律区，全窗 dm=2.14 为连续过渡形态的平均等效指数，**降条件值**（与 main 稳健 m=2.53 的分工：全局形态由 main 承载，porod 局域指数的窗口依赖性本身即'连续过渡 vs 真分形'的判别证据）" }
+  },
+  "validation": {
+    "L1_synthetic": "PASS (2026-10-02, test_synthetic.py 5 用例全过: A main 物理凝胶中心 / B main 辐照形态 / C main m 撞上界 / D porod 中心 / E porod dm 撞下界; 判据 3σ 恢复 + chi2/dof∈[0.6,1.6] + 多起点一致<1%, 固定种子 20261002)",
+    "L2_physical": "部分 (2026-10-02, MCP 对话实测双样品 pam/cncs 全区 [0.07,2.6] nm⁻¹ main + 文献窗 [0.3,2.0] porod 加权拟合: 形态 PASS——pam 低 q 近平台+尾部 −1.18 对应文献 Fig.1a 物理缠结凝胶形态，m=1.898 落物理凝胶锚点域 1.79–1.84±0.20；cncs 低 q 陡幂律 −1.8→−2.5 对应 Fig.1b 辐照交联形态，m=2.531 与辐照高剂量端 2.55±0.2 吻合；mesh=2πξ 口径经文献数值链验证（ξ=3.0→18.8 nm ≈ 17.5±0.5）；数值域偏差披露——pam ξ=0.89、cncs ξ=9.66 均短于文献 3–4 nm 量级（文献为明胶水凝胶浓度系列，本站样品体系未指定，数值仅作形态对照）；porod 模式——pam 文献窗 dm<1 反物理、三窗对照证实无自相似区（不适配披露）；cncs 三窗对照 dm 单调下滑 2.49→1.70→1.04 同判无自相似区、全窗 dm=2.14 为平均等效指数（条件值）；χ²/dof>3 样品（cncs main 5.44 / cncs porod 24.66 / pam porod 3.07）均按纪律完成诊断并披露（σ 列系统性低估 / 窗口不适配），证据链 manifest acceptance_baseline station_* notes + runs/M3_gel_network/ 报告 sample_note)",
+    "human_review": "PASS（2026-10-02 用户终审签字：双样品分析效果好、结果满意（用户原话'分析效果和结果都很好'），审核通过入库；porod 模式双样品经窗口对照均判无自相似幂律区（pam 文献窗 dm<1 不适配 / cncs 三窗单调下滑），条件值披露已入报告与 manifest，属数据物理形态的正常结论不作模型缺陷记录）"
+  }
+}

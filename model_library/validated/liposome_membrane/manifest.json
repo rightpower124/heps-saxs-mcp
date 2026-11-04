@@ -1,0 +1,96 @@
+{
+  "name": "liposome_membrane",
+  "version": "0.1.0",
+  "status": "validated",
+  "description": "3/5-高斯对称平膜 + 双层结构因子简化式（Schilt 2016 Eq.1 简化形式），头基Δρ归一，含PEG层10%判据厚度",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "Schilt 2016, Biochim. Biophys. Acta 1860:108-119, DOI 10.1016/j.bbagen.2015.09.012",
+    "ported_scripts": [
+      "baseline/liposome/fit_nopeg_membrane.py",
+      "baseline/liposome/fit_peg_membrane.py"
+    ]
+  },
+  "modes": {
+    "nopeg": {
+      "sample": "不含 PEG 脂质体",
+      "plot_title": "no-PEG liposome",
+      "fit_label": "fit: membrane*S2 + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit_total"
+    },
+    "peg": {
+      "sample": "含 PEG 脂质体",
+      "plot_title": "PEG liposome",
+      "fit_label": "fit: 5G membrane (PEG free)",
+      "residual_title": "relative residual (PEG model)",
+      "fit_column": "I_fit",
+      "compare_column": "I_compare",
+      "compare_label": "best no-PEG model (drho_peg=0)"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "M2.5-3 能力自发现：Agent 经 saxs_list_models 读取本块编排该模型的分析流程；通用纪律（质量门/交付物/异常处理）见 agent_prompts/saxs_workflow.md，不随模型重复",
+    "q_window_nm": [0.3, 4.4],
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model, mode, path, q_unit=与用户确认值)",
+      "make_plots（三联图）",
+      "saxs_report（四件套交付）"
+    ],
+    "multi_sample": {
+      "applies": "双样品膜参数传递（先测无修饰样品，再测目标样品）",
+      "steps": [
+        "saxs_fit(model, 'nopeg', path_A) → 膜参数 params（zh/tau_h/tau_t/drho_t）",
+        "saxs_fit(model, 'peg', path_B, fixed=上一步 params) → PEG 层参数",
+        "第 2 步返回的 nopeg_compare.params 传给 make_plots / saxs_report 的 compare_params（对照虚线 + 对照数据列）"
+      ]
+    },
+    "diagnostics": [
+      {"tool": "saxs_diag_release", "when": "多样品流程完成后按需", "purpose": "检验跨样品固定膜参数假设", "example": {"release": ["zh", "tau_h"]}},
+      {"tool": "saxs_diag_multistart", "when": "质疑最优解全局性时"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时"},
+      {"tool": "saxs_diag_param_scan", "when": "量化简并宽度 / 位置依赖时"}
+    ]
+  },
+  "labels": {
+    "A": ["比例因子", ""],
+    "B": ["常数背景", ""],
+    "zh": ["头基半距", "nm"],
+    "tau_h": ["头基FWHM", "nm"],
+    "tau_t": ["尾链FWHM", "nm"],
+    "drho_t": ["尾链相对电子密度 Δρ_t/Δρ_h", ""],
+    "f": ["双层强度分数", ""],
+    "d": ["层间距", "nm"],
+    "sd": ["层间距涨落", "nm"],
+    "z_peg": ["PEG层中心", "nm"],
+    "tau_peg": ["PEG层FWHM", "nm"],
+    "drho_peg": ["PEG层相对电子密度", ""]
+  },
+  "refs": {
+    "paper": "Schilt Y. et al., Biochim. Biophys. Acta 1860 (2016) 108-119, DOI 10.1016/j.bbagen.2015.09.012",
+    "si": "补充材料 mmc1.pdf（Table S1 五层高斯参数基准；本地副本 baseline/liposome/references/）",
+    "assumptions": [
+      "① 膜为无限平膜（曲率修正忽略）",
+      "② 头基电子密度归一为 1，尾区为相对值",
+      "③ 双层相关用 Z=2 简化结构因子",
+      "④ 缓冲液背景未扣除，以常数 B 近似",
+      "⑤ PEG 层对称分布于膜两侧（镜像同参数）"
+    ]
+  },
+  "acceptance_baseline": {
+    "note": "来自 baseline/liposome/脂质体SAXS拟合结果汇总.md，L2 验证对照值",
+    "nopeg": { "chi2_dof": 2.09, "zh": 1.6428, "d": 6.5119, "sd": 0.6437 },
+    "peg": { "chi2_dof": 1.212, "d": 9.0502, "sd": 1.8195, "z_peg": 4.4962 },
+    "derived": { "d_hh_nm": 3.29, "L_peg_nm": 2.40, "L_over_RF": 0.69 },
+    "model_comparison": { "chi2_nopeg": 1273.3, "chi2_peg": 943.9 }
+  },
+  "validation": {
+    "L1_synthetic": "PASS (2026-09-23, test_synthetic.py: 中心/撞界/PEG 三用例全过, chi2/dof 0.985/1.050/0.903, 多起点一致, 参数恢复<=2.2sigma)",
+    "L2_physical": "PASS (2026-09-23, MCP 对话实测: chi2/dof=2.086/1.212, d_hh=3.286±0.427, L_peg=2.397±0.315, L/R_F=0.685, 蘑菇/过渡区 — 与 baseline 数值逐位吻合)",
+    "L3_quality_gate": "部分（at_bound 标记已内置并修正单侧边界容差；完整版 M2）",
+    "human_review": "PASS（2026-09-23 用户审核确认：分析结果与原人工分析逐位一致，签字入库）",
+    "M2_regression": "PASS (2026-09-24, T1 通用引擎 saxs_fit 对话实测: nopeg/peg 全部参数、perr、chi2/dof、derived、nopeg_compare 与 baseline/liposome/regression_baseline.json 逐位一致; 四件套交付物重跑通过)"
+  }
+}

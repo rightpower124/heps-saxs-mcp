@@ -1,0 +1,35 @@
+{
+  "model": "hardcarbon_closedpore",
+  "version": "0.1.0",
+  "created": "2026-10-25",
+  "note": "回归基准：L2 主锚 = gxl_q 样品 main 模式主窗 [0.45,2.26] nm⁻¹（q_unit=A^-1，fmt skip_rows=57）。重构/换引擎后与下列数值逐位一致（χ²/dof、dof、params 全精度快照；B 背景撞下界的 ULP 级浮动属 10-07 已定性环境噪声，params 对拍用 1e-12 相对容差双判据）。",
+  "anchors": [
+    {
+      "case": "gxl_q_main_primary",
+      "data": "D:\\博士后研究\\B自编程序\\2025-11-17-GXL\\gxl_q.dat",
+      "q_unit": "A^-1",
+      "q_window_nm": [0.45, 2.26],
+      "fmt": { "encoding": "utf-8", "delimiter": "space", "skip_rows": 57, "col_q": 0, "col_i": 1, "col_s": 2 },
+      "chi2_dof": 0.9759450059096201,
+      "dof": 705,
+      "at_bound": ["B"],
+      "params": {
+        "A": 0.24312822850487978,
+        "a": 2.865211889787798,
+        "Bp": 3.143565756325185,
+        "a1": 0.7214807481671675,
+        "B": 9.065773691655196e-19
+      },
+      "derived": {
+        "D_pore_nm": 4.563044904341204,
+        "Rg_nm": 1.7672596922510098,
+        "q_knee_nm": 1.3860383697560554
+      }
+    }
+  ],
+  "secondary_checks": [
+    { "case": "gxl_P_main", "chi2_dof": 1.501582224119574, "a1": 0.7727142959048438 },
+    { "case": "gxl_3H_main", "chi2_dof": 2.20993780833333, "a1": 0.6575161482059635 },
+    { "case": "gxl_J_main", "chi2_dof": 1.7958266480767289, "a1": 0.8098893257030423 }
+  ]
+}

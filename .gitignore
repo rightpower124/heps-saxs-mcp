@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+runs/
+logs/
+runs_archive/
+model_inbox/*/
+!model_inbox/README.md
+.trae/
+.screenshots/
+临时数据/
+origin_pro_tmp/
+*.log

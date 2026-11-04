@@ -1,0 +1,100 @@
+{
+  "name": "fuzzy_sphere_extended",
+  "version": "0.1.0",
+  "status": "candidate",
+  "description": "模糊球 + Rathgeber blob 散射（Neubert 2026 桥接复现）：作者亲笔 SASview 插件逐式转写；mode main = 纯形式因子（盐消除结构峰的曲线，如 60 °C 全系列 / ICR≥0.2）/ mode sq = ×PY 硬球结构因子（20 °C 低 q 粒子间关联，作者同款配置）",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "Neubert R. et al., Structural Changes of Flexible, Small-Sized Polycationic Microgels Upon Interaction With Hexacyanoferrate(III) Viewed at an Atomic and a Particle Scale, Macromol. Chem. Phys. 2026, 227, e00493, DOI 10.1002/macp.202500493",
+    "implementation": "作者亲笔 SASview 插件 fuzzy_sphere_extended.py/.c（数据包 SASviewModels/ 归档；Rathgeber blob 形式 V-scaling），站内逐式转写为 NumPy",
+    "blob_ref": "Rathgeber S., Monkenbusch M., Kreitschmann M., Urban V., Brulet A., J. Chem. Phys. 117 (2002) 4047-4062",
+    "local_reference": "test_data/fuzzy_sphere/（论文 main+SI PDF）；临时数据/Neubert2026_DataforPub/（作者交付原始数据 + SASviewModels 源码）",
+    "sq_ref": "PY 硬球 = Kotlarchyk & Chen 1983 闭合式（sasmodels 1.1.0 hardsphere.c 逐式移植，与 alcu_precipitate model1 同源同版）"
+  },
+  "modes": {
+    "main": {
+      "sample": "微凝胶/纳米凝胶（模糊界面 + 网络涨落；盐消除结构峰的曲线，作者 60 °C 全系列与 ICR≥0.2 处理）",
+      "plot_title": "Fuzzy sphere extended (Rathgeber blob)",
+      "fit_label": "fit: A*(amp^2 + rel_amp*P_blob) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "sq": {
+      "sample": "微凝胶/纳米凝胶，低 q 粒子间硬球关联（作者 20 °C ICR 0 同款配置：硬球 S(Q) 改善低 q；Hayter MSA 不适用）",
+      "plot_title": "Fuzzy sphere extended x hard-sphere S(q)",
+      "fit_label": "fit: A*(amp^2 + rel_amp*P_blob)*S_PY(r_hs,eta) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "能力自发现：Agent 经 saxs_list_models 读取本块编排该模型的分析流程；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.03, 2.15],
+    "q_window_note": "下界 0.03：数据首点 q=0.0259 处 I=-392±70（5.6σ 负）为边缘伪影须避开；上界 2.15 nm⁻¹ 为数据量程端",
+    "single_sample": [
+      "saxs_load_curve（体检；本模型锚数据 500 点 q∈[0.0259,2.1476] nm⁻¹，首点异常点在窗口裁决时剔除）",
+      "saxs_fit(model='fuzzy_sphere_extended', mode=按数据形态选：'main'=无结构峰 / 'sq'=20 °C 类低 q 关联（作者同款 PY 硬球）；path, q_unit=与用户确认值)",
+      "make_plots（两联图）",
+      "saxs_report（四件套交付）"
+    ],
+    "multi_sample": "按样品/温度/ICR 系列逐条拟合；作者 SI Chapter 6 参数表（20/60 °C × ICR 0-3.0 全网格）为系列对照锚",
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "10 参数全局拟合必跑（R-σ 界面简并、rel_amp-ξ 涨落幅度简并排查）"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时（重点 σ_fuzzy、rel_amp、eta）"},
+      {"tool": "saxs_diag_param_scan", "when": "量化简并宽度 / 窗口位置依赖时（重点扫 sigma_fuzzy / xi / rel_amp / eta）"}
+    ],
+    "single_level_note": "本模型为单层级模型（球+blob 两分量强耦合于同一幅度 A），不适用 lv 逐级递增纪律（该纪律适用于 gp/unified 层级级联族）"
+  },
+  "labels": {
+    "A": ["幅度（吸收 SASview scale·Δρ²·V·1e-4 全链）", ""],
+    "R": ["模糊球半密度半径", "nm"],
+    "sigma_fuzzy": ["界面模糊宽度 σ", "nm"],
+    "rel_amp": ["blob 项相对幅度（无量纲）", ""],
+    "rg": ["blob 链回转半径 Rg", "nm"],
+    "flory_nu": ["Flory 指数 ν（D_f=1/ν）", ""],
+    "xi": ["OZ 关联长度 ξ", "nm"],
+    "r_hs": ["硬球半径（radius.effective 口径）", "nm"],
+    "eta": ["硬球体积分数", ""],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Neubert R. et al., Macromol. Chem. Phys. 2026, 227, e00493, DOI 10.1002/macp.202500493",
+    "si": "SI Chapter 6（fuzzy sphere extended model 拟合参数表，Pure microgel in water / 直接加盐 / 透析系列全网格）",
+    "assumptions": [
+      "① 幅度链：SASview 管线 scale·Δρ²·V·1e-4 由自由参数 A 整体吸收（SI 表 scale=123.94 与数据 Y[1/m] 幅度链存在未闭合口径，结构参数全部标度无关不受影响）；作者 sld=16.195/sld_solvent=9.5（1e-6 Å⁻²）→ Δρ=6.695e-6 Å⁻² 作锚披露，不作自由参数",
+      "② polydispersity 未纳入：作者 radius.width=0.4 nm（PD≈2.2%）高斯平均，站内第一版单分散（L2 对拍披露项）",
+      "③ flory_nu 站内界 [1/3, 0.7]（作者 .py 为 [0.25, 0.7]）：μ=1/ν−1>2 时 blob 高 q 尾 sin(μπ/2)<0 产生负强度，ν≥1/3 保证恒正",
+      "④ sq 模式 P·S 乘积近似（单分散 PY 硬球）；作者明确 Hayter MSA 不适用（无静电贡献，zeta 电位佐证）",
+      "⑤ q→0 单点 P_blob_raw 取数学极限 1（作者 .c 取 0；q=0 不在拟合域，无实际影响）"
+    ]
+  },
+  "acceptance_baseline": {
+    "note": "L2 对照锚 = 作者 SI Chapter 6 'Pure microgel in water' 20 °C 行全参数（= Figure 3 蓝色 20 °C 曲线，ICR 0；用户邮件复现锚 R=18 nm、2σ=20 nm、ξ=9 nm 与本行一致）+ 作者交付数据文件",
+    "paper_SI_20C_pure": {
+      "chi2": 1.21,
+      "scale": 123.94,
+      "background": 0.001,
+      "sld": 16.195,
+      "sld_solvent": 9.5,
+      "radius_nm": 17.81,
+      "sigma_fuzzy_nm": 10.311,
+      "rel_amp": 0.12621,
+      "rg_nm": 21.0,
+      "flory_nu": 0.4,
+      "cor_length_nm": 9.3354,
+      "radius_effective_nm": 32.81,
+      "volfrac": 0.1,
+      "radius_width_nm": 0.4,
+      "radius_nsigmas": 1,
+      "structure_factor": "hard sphere (PY, not Hayter MSA)"
+    },
+    "reproduction_criteria": "①主锚 R/σ/ξ 复现误差棒内一致（站内加权口径与作者不同，χ²/dof 数值不硬比，要求同量级≈1 且残差无系统结构）；②形态对拍：拟合曲线与作者拟合输出（SAXS_PNIPAM-PMAPTAC_KCl_Tdep/RN_Syn-muG_2q-01MKCl_20degC_fuzzsphext_5.txt，文件名含 fuzzsphext）逐点形态一致；③sq 模式 r_hs≈32.81/eta≈0.1 锚（作者固定/收敛值的复现，半稳健判据）"
+  },
+  "validation": {
+    "L1_synthetic": "PASS (2026-10-09: sq 10/10 参数恢复 perr 归一≤1.4σ; main 6/8 + rel_amp-ξ 单谷简并预警正确; multistart 单谷)",
+    "L1b_author_source": "PASS (2026-10-09: 4 参数组×40 点 max_rel=2.654e-15; 披露: 作者黄金锚 0.02102 交付包内部不一致不拦截)",
+    "L2_physical": "PASS (2026-10-09: sq χ²/dof=0.9606; multistart 5 起点含 SI 锚播种单谷; R∈[1,18] 平坦简并谷, SI 锚统计等价 F=1.605 p=0.206, SI-R 处 σ=10.43≈SI 10.311; S(Q) 必要性 F=50.3 p=1.4e-20; 复现判据①部分成立/F 检验意义下复现 ②成立 ③接近披露 +8.4%/+32%; 详见 runs/M4_fuzzy_sphere_extended/入库评估小结.md)",
+    "human_review": "PASS (2026-10-09 用户签字: 全窗 11 文件 + q<1 收窄窗补照 10 文件（sq_qmax1/main_qmax1 各 5 件，S(Q) F=52.4 p=2.5e-19）目检通过；两轮渲染轴范围复核达标后放行)"
+  }
+}

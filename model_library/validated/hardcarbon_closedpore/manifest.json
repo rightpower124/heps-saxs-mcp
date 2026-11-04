@@ -1,0 +1,83 @@
+{
+  "name": "hardcarbon_closedpore",
+  "version": "0.1.0",
+  "status": "validated",
+  "description": "硬碳闭孔 Debye 关联（Stevens-Dahn）拟合：幂律项 + Debye-Bueche 闭孔项 + 常数背景；mode main = AEM SI Fig.S10 简化式（5 参数）/ mode full = Stevens 2000 Eq.2 双 Debye 完整式（+中孔项，7 参数）；导出 D_pore、Rg、q_knee",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "D. A. Stevens, J. R. Dahn, An In Situ Small-Angle X-Ray Scattering Study of Sodium Insertion into a Nanoporous Carbon Anode Material within an Operating Electrochemical Cell, J. Electrochem. Soc. 147 (12) 4428-4431 (2000)",
+    "ported_from": "Stevens 2000 Eq.1（单 Debye + 幂律 + 背景，Debye-Anderson-Brumberger 1957 关联函数）与 Eq.2（双 Debye + 显式 Δρ·B·a1⁶ 纳米孔项 + C·a2⁴ 中孔项）；应用形式 = Zheng et al., Adv. Energy Mater. 2024, 14, 2303064 SI Fig.S10（I = A/q^a + B·a1⁴/(1+a1²q²)² + D，R = 2·a1·√10）。Porod 口径改写逐项恒等（Bp≡B_SI；Bp=Δρ·B·a1²、Bmp=C·a2²），幅度参数与幂律幅度同口径可比",
+    "local_reference": "D:\\博士后研究\\B自编程序\\2025-11-17-GXL\\（Stevens_2000 原文 PDF + AEM 2023 正文 PDF + CO2.pdf SI + 4 样品 gxl_{q,P,3H,J}.dat，2026-10-25 立项；提取文本归档 runs/261025_GXL复现/doc_extract/）"
+  },
+  "modes": {
+    "main": {
+      "sample": "硬碳负极材料（闭孔微孔体系，Stevens-Dahn SAXS 谱族）",
+      "plot_title": "Hard carbon closed pores (Stevens-Dahn Debye)",
+      "fit_label": "fit: A*q^-a + Bp*q^-4*F(a1*q) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "full": {
+      "sample": "同上；双孔体系（纳米孔+中孔膝位分离 ≥2.5 倍时可用）",
+      "plot_title": "Hard carbon closed pores (Stevens-Dahn Eq.2 full)",
+      "fit_label": "fit: A*q^-a + Bp*F(a1*q) + Bmp*F(a2*q) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "M3-261025 能力自发现：Agent 经 saxs_list_models 读取本块编排该模型的分析流程；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.15, 2.26],
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='hardcarbon_closedpore', mode='main', path, q_unit=与用户确认值, qmin=0.15, qmax=2.26)",
+      "make_plots（两联图）",
+      "saxs_report（四件套交付）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "质疑最优解全局性时（A/Bp 幅度简并、a→4 共线区排查）"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时（a1 上界、a 上界）"},
+      {"tool": "saxs_diag_param_scan", "when": "量化 a1 简并宽度 / 膝位落窗辨识性取证时（重点扫 a1、a）"}
+    ],
+    "notes": [
+      "膝位落窗前提：q_knee=1/a1 须落在 [qmin×1.5, qmax/1.5] 内，膝在窗外时 a1 不可辨识（仅 a 稳健），闭孔尺度量按条件值或不适配处理",
+      "full 模式两膝间距前提：q_knee(a2)/q_knee(a1) ≥ 2.5，不满足时回退 main（本批 GXL 数据 a1≈0.6-0.77/a2≈1 nm 预期不满足，full 供未来数据集）",
+      "原位 Δρ 对比度分离（Stevens 2000 招牌能力）需原位充放电 SAXS 数据集，静态数据不适用"
+    ]
+  },
+  "labels": {
+    "A": ["幂律项幅度（颗粒/大结构散射）", ""],
+    "a": ["幂律指数（自由；Porod 极限 4；Stevens 原文 3.3=狭缝准直 Smearing 钉值）", ""],
+    "Bp": ["闭孔项 Porod 口径幅度（高 q 渐近 Bp·q⁻⁴；≡AEM SI 的 B；=Stevens 的 Δρ·B·a1²）", ""],
+    "a1": ["纳米孔 Debye 特征长度（nm）→ Rg=a1√6 / D_pore=2a1√10", "nm"],
+    "Bmp": ["（full）中孔项 Porod 口径幅度（=Stevens 的 C·a2²）", ""],
+    "a2": ["（full）中孔 Debye 特征长度（nm），a2>a1", "nm"],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Stevens & Dahn, J. Electrochem. Soc. 147 (12) 4428-4431 (2000)；应用文献 Zheng et al., Adv. Energy Mater. 2024, 14, 2303064（DOI 10.1002/aenm.202303064）",
+    "si": "AEM 2024 SI Fig.S10（main 模式公式与 R=2·a1·√10 口径）；Stevens 2000 原文 Eq.1/2 + Table I 拟合锚（a1=2.82 Å、指数 3.3 狭缝准直）",
+    "method": "Debye, Anderson & Brumberger, J. Appl. Phys. 28 (1957) 679（关联函数）；Porod 回转半径定义（Stevens 2000 原文引 Glatter & Kratky 1982）",
+    "assumptions": [
+      "① 闭孔项 = Debye-Anderson-Brumberger 关联函数（随机两相体系的 Debye-Bueche 谱形），孔隙随机分布、无孔间干涉（Stevens 2000 原文假设）",
+      "② 幂律项幅度 A 与闭孔 Porod 幅度 Bp 均为归一量（数据强度单位 a.u.），跨样品仅在同批强度标度内可比",
+      "③ D_pore 为等效球形孔直径（D=2·a1·√10）；AEM SI 记号 R=2·a1·√10 的 R 实为直径，跨文献比对注意 2 倍口径差",
+      "④ 本站针孔准直无狭缝 Smearing，幂律指数 a 自由拟合（Stevens 原文 3.3 为其狭缝准直仪器钉值，不适用本站）",
+      "⑤ 空孔对比度固定（Δρ=基体 SLD，无 SLD 自由参数）；充钠原位对比度变化（Δρ→0）需原位数据集，静态数据不适用"
+    ]
+  },
+  "acceptance_baseline": {
+    "note": "L2 对照锚点（Stevens 2000 Table I 为其吡啶葡萄糖硬碳原位池首扫，AEM 2024 为淀粉硬碳；均为公式链与量级核对目标，非本站 GXL 样品预期值）；本站首测拟合后回填",
+    "stevens2000_table1_pellet_in_air": { "a1_A": 2.67, "R_sphere_nm": 0.844, "exponent": 3.3 },
+    "stevens2000_table1_pellet_in_cell": { "a1_A": 2.82, "R_sphere_nm": 0.892, "exponent": 3.3 },
+    "aem2024_SI_figS10": { "D_pore_HCMP_nm": 3.82, "D_pore_HCMP_CO2_nm": 4.86, "R_SI_formula": "2*a1*sqrt(10)" }
+  },
+  "validation": {
+    "L1_synthetic": "PASS-无噪判据 (2026-10-25, MCP 通道：Exec V8 生成 4×200 点无噪合成数据落盘 runs/261025_GXL复现/l1_synthetic/ → saxs_fit 反演。A 文献锚 a=2.3/a1=0.769 恢复 9 位有效数字 χ²≈3.6e-16；B 大孔径 a1=1.5 精确；C Porod 共线区 a=3.8 精确（A/Bp 共线风险用例通过）；D full 双膝 7 参 a1=0.7/a2=2.5 精确。过程教训：60 点短数据触发 init_p0 B0=I[-100:].mean() 全均值退化（短数组切片取全部点）→ 背景初值失真 3 量级 → 闭孔项被压入关闭谷（Bp≈1e-7、a1 撞下界）；200 点加密即修复。含噪判据（chi2∈[0.6,1.6]+3σ 恢复+多起点离散）待 shell 恢复跑 test_synthetic.py 复核",
+    "L1b_transcript": "PASS (2026-10-25, Exec V8 独立 JS 实现双式对拍：Porod 口径 vs Stevens Eq.1/Eq.2 字面式，a=3.3 锚定，main B_raw≡Bp max_rel=2.3e-16、full dr_Bn·a1²≡Bp+C≡Bmp max_rel=3.9e-16，机器精度；model.py 内置 model_vec_stevens_raw/model_vec_full_raw 供 test_synthetic.py 离线复核)",
+    "L2_physical": "PASS-主窗 (2026-10-25, GXL 四样品 main [0.45,2.26]：χ²/dof=0.976/1.502/2.210/1.796 全部<3、rms_rel=2.4-3.1%；全窗 [0.15,2.26] q 样品 χ²=53.5 低 q 伪影主导 → 窗口依赖诊断裁决主窗（收窗骤降 55 倍，10-02 hardcarbon_ts 同族）；multistart q 6/6 + P/3H/J 各 3/3 全局唯一（χ² 尾数 1e-12 级一致）；q 窄窗 [1.0,2.26] a1 差 4.4%≤7% + a1 param_scan V 形单谷（0.55→19.6/0.65→5.5/0.72→0.98/0.85→2.15/1.1→15.2）；a1=0.7215±0.005/0.7727±0.007/0.6575±0.018/0.8099±0.008 nm、D_pore=4.56/4.89/4.16/5.12 nm 落 AEM 文献锚区（HCMP 3.82/HCMP-CO2 4.86 nm）两侧；B 背景四样品全部撞下界=条件值（末端为闭孔 Porod 尾，背景不显著）；a=1.96-2.87 自由指数（样品间真实差异）；full 模式本批不拟合（两膝间距 <2.5 倍前提不满足，manifest notes 已声明）；PNG 目检 ×2（gxl_q/3H）：轴范围无截断、无缺字、残差低 q 平高 q 泊松扇形无系统弯曲；磁盘数值 Grep 逐位命中",
+    "human_review": "PASS (2026-10-25, 用户目检签字：runs/261025_GXL复现/hardcarbon_closedpore/ 四样品 20 文件（各 5 件套），PNG 目检 ×2 深检（gxl_q/gxl_3H）轴范围无截断、无缺字、残差形态正常；磁盘数值 Grep 逐位命中；用户指令'模型入库做完'为最终确认)"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "hardcarbon_ts",
+  "version": "0.1.0",
+  "status": "validated",
+  "description": "硬碳闭孔 Teubner-Strey 四组分拟合（Adv. Mater. 2025 SI Eq.1-7）：幂律颗粒项 + TS 微孔项 + 常数背景；导出孔径 D、孔间距 d、相关长度 ξ、微孔比表面积 S_mp",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "Molecular Stitching in Polysaccharide Precursors for Hard Carbon Anodes with Ultra-High Sodium Storage, Adv. Mater. 2025, 37, 2420251, DOI 10.1002/adma.202420251",
+    "ported_from": "文献 SI Methods Eq.1（TS 谱形）/ Eq.3（d）/ Eq.4（ξ）/ Eq.6（D=2√(5C₁)）/ Eq.7（S_mp，Porod 渐近口径）；四组分分解按文献 Figure 2h 与 Figure S10 的 I_particles/I_pores/I_bckg 呈现；方法学源头 Saurel et al., Energy Storage Mater. 21 (2019) 162；Teubner & Strey, J. Chem. Phys. 87 (1987) 3195；微孔信号归属 Stevens & Dahn, J. Electrochem. Soc. 147 (2000) 4428",
+    "local_reference": "test_data/hardcarbon_ts/（主文献 PDF + stevens2000.pdf + SI docx + 3 个样品 dat，2026-10-02 入库归档）"
+  },
+  "modes": {
+    "main": {
+      "sample": "硬碳负极材料（多糖前驱体热解碳，闭孔超微孔体系）",
+      "plot_title": "Hard carbon closed pores (Teubner-Strey)",
+      "fit_label": "fit: A*q^-n + TS(I0,C1,C2) + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "M3-261002 能力自发现：Agent 经 saxs_list_models 读取本块编排该模型的分析流程；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.175, 11.3],
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='hardcarbon_ts', mode='main', path, q_unit=与用户确认值)",
+      "make_plots（两联图）",
+      "saxs_report（四件套交付）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "质疑最优解全局性时（C1/C2 简并排查，中 q 肩形态弱时尤需）"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界 / 疑似简并时（C1 下界、C2 上下界）"},
+      {"tool": "saxs_diag_param_scan", "when": "量化简并宽度 / 窗口位置依赖时（重点扫 C1/C2/n）"}
+    ]
+  },
+  "labels": {
+    "A": ["幂律幅度（颗粒散射项）", ""],
+    "n": ["幂律指数（初值 4=Porod 极限）", ""],
+    "I0": ["Teubner-Strey 微孔项幅度", ""],
+    "C1": ["TS 二阶系数（nm²）→ D=2√(5C₁)", "nm^2"],
+    "C2": ["TS 四阶系数（nm⁴）→ d/ξ", "nm^4"],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "Adv. Mater. 2025, 37, 2420251, DOI 10.1002/adma.202420251",
+    "si": "adma202420251-sup-0001-suppmat.docx（SI Methods 'The surface area and diameter of micropores' 节 Eq.1-7；Figure S10）",
+    "assumptions": [
+      "① 四组分分解（particles/pores/bckg）按文献 Figure 2h/S10 的拟合呈现复现；幂律指数 n 文献未明确给出数值，本插件自由拟合（初值 4=Porod 极限）",
+      "② C₁>0 为孔径公式 D=2√(5C₁) 适用前提（TS 谱无峰/弱峰形态；中 q 鼓包由 TS 平台→弯折过渡承载）",
+      "③ ρ_s = 2.26 g/cm³（石墨密度上限，用户 2026-10-02 裁决）；文献由 XRD d002/d100 按 SI Eq.5 计算，本站无 XRD 数据故取上限口径",
+      "④ S_mp 有效性条件于数据强度绝对标定假设（abs.units ≈ cm⁻¹）；数据 header 'I_subtracted(abs.units*thickness)'、Thickness=1.0",
+      "⑤ 孔体积分数 ∅ 不产出：SI Eq.2 反解依赖绝对标定核验，本次未做"
+    ]
+  },
+  "acceptance_baseline": {
+    "note": "L2 对照锚点（文献正文 STHC-MS/STHC 报告值，为公式链与量级核对目标，非本站样品预期值）；本站首测拟合后回填",
+    "paper_STHC_MS": { "S_mp_m2g": 307.2, "D_nm": 0.6, "closed_fraction": 0.982 },
+    "paper_STHC": { "S_mp_m2g": 488.5, "D_nm": 0.85, "closed_fraction": 0.315 }
+  },
+  "validation": {
+    "L1_synthetic": "PASS (2026-10-02, test_synthetic.py: 三用例全过——A 文献锚尺度 chi2/dof=1.106 最差恢复 B=1.2sig / B 大孔径 0.913 最差 n=0.9sig / C 幂律撞界 n=6 1.055 最差 A=2.4sig，多起点全一致；导出量公式链自检 D=2√(5C1) 精确自洽。过程教训：σ 兜底 Imax 压平强动态范围数据致 TS 简并解（已改纯相对 σ），B 用例 TS 占比 <3.5% 不可辨（I0 增强），均入册 lessons.md E 类 10-02)",
+    "L2_physical": "PASS-主窗 (2026-10-02, MCP 对话实测 3 样品：全窗 [0.175,11.3] χ²/dof=16.97/7.07/7.04 且样品1落 TS 关闭简并解（multistart 5/5 全局唯一）→ 窗口依赖诊断确立主窗 [0.45,11.3]：χ²/dof=1.025/0.908/0.752，TS 参数窄窗 [1.0,11.3] 对照一致 ≤7%；multistart 样品1 6起点 4 全局+2 极端起点局部盆（披露）、样品2/3 3/3 全局；at_bound 引擎跨量级误报已修复（C 类 10-02）；物理量 D=0.73/1.46/1.35 nm 落文献邻域（STHC-MS 0.6 / STHC 0.85 nm，样品间差异合理）、d=2.12/4.16/4.22 nm、ξ=0.23/0.43/0.50 nm；S_mp=15.4/8.25/15.5 m²/g 为标定条件值（a.u. 强度，文献 307-489 m²/g 为绝对标定不可直接比）；证据链 runs/M3_hardcarbon_ts/ 三样品报告 sample_note)",
+    "human_review": "PASS (2026-10-02, 用户目检三样品 15 文件签字'拟合结果极其优秀'；交付 runs/M3_hardcarbon_ts/{1,2,3} 各 5 件套，关键数值 Grep 逐位核验一致)"
+  }
+}

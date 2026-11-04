@@ -1,0 +1,79 @@
+{
+  "name": "phase_separation_bp",
+  "version": "0.1.0",
+  "status": "validated",
+  "description": "相分离/界面层广延峰模型（候选）：幂律底 + 广延峰 + 背景；mode gauss/lorentz = 峰形对拍双模式（高斯/Lorentz 峰替换 Hammouda broad_peak 解析峰形，峰位/峰宽全自由）；派生特征周期 d=2π/q0 与峰 FWHM；双连续相分离正源物理 = Teubner & Strey 1987",
+  "entry": "model.py",
+  "plugin": "plugin.py",
+  "source": {
+    "paper": "方法学锚：①Hammouda B.F. (NIST) broad peak model（SASview/sasmodels broad_peak 同源文档）；②Teubner M., Strey R., Origin of the scattering peak in microemulsions, J. Chem. Phys. 87 (1987) 3195, DOI 10.1063/1.453006",
+    "ported_from": " phenomenological 组合模型（非单篇文献逐式转写）：幂律底（Porod 族）+ 标准峰形（gauss/lorentz）+ 背景；立项依据 = 2026-10-22 相分离 1.dat 实测——broad_peak 解析峰形对非对称宽浅峰失配（χ²/dof=38.9-49.3，残差准周期摆动），teubner_strey 低 q 陡降尾失配（χ²/dof=106.2）",
+    "local_reference": "数据与文献归档 D:\\博士后研究\\B自编程序\\2025-03-05-相分离-界面层厚度\\（1.dat + Nat. Mater. 2022 s41563-022-01195-4 及其 SI）；母文献 SAXS 仅做 d=2π/q 峰位读取、无拟合方法学引用（42 条参考文献逐条核验）"
+  },
+  "modes": {
+    "gauss": {
+      "sample": "相分离/双连续结构样品（关联峰骑在幂律底上；首测锚 Xeuss 3.0 Cu 靶未扣背景原始数据）",
+      "plot_title": "phase separation broad peak (gauss)",
+      "fit_label": "fit: A*q^-dm + gauss peak + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    },
+    "lorentz": {
+      "sample": "相分离/双连续结构样品（Lorentz 峰形对拍）",
+      "plot_title": "phase separation broad peak (lorentz)",
+      "fit_label": "fit: A*q^-dm + lorentz peak + B",
+      "residual_title": "relative residual",
+      "fit_column": "I_fit"
+    }
+  },
+  "recommended_workflow": {
+    "purpose": "2026-10-22 立项（用户方向：突出峰贡献）：广延峰显式建模；通用纪律见 agent_prompts/saxs_workflow.md",
+    "q_window_nm": [0.075, 0.9],
+    "q_window_note": "窗口数据驱动：下界=束挡截止后首点（逐样品探测确认，勿套用）；上界=弥散界面 Porod 偏离区起点（σ/I 扫描+残差结构裁决；q>上界区为界面层分析输入，有意避开峰拟合）",
+    "single_sample": [
+      "saxs_load_curve（体检，确认点数/量程/丢点）",
+      "saxs_fit(model='phase_separation_bp', mode='gauss', path, q_unit=与用户确认值, qmin/qmax=束挡/噪声底裁决)",
+      "saxs_fit(model='phase_separation_bp', mode='lorentz', 同窗) → 峰形对拍",
+      "saxs_diag_multistart（峰浅场景必备：amp/q0/峰宽简并排查，起点须传完整参数字典 warm-start）",
+      "saxs_diag_f_test（gauss vs lorentz 峰形裁决，同窗同数据）",
+      "make_plots + saxs_report（择优模式四件套交付）"
+    ],
+    "multi_sample": null,
+    "diagnostics": [
+      {"tool": "saxs_diag_multistart", "when": "每样品必备（峰浅场景 amp/q0/σ 简并；起点传完整参数字典防 SVD 不收敛）"},
+      {"tool": "saxs_diag_param_scan", "when": "量化 q0/峰宽简并宽度与窗口位置依赖时"},
+      {"tool": "saxs_diag_relax_bound", "when": "参数撞界时（重点 q0/sigma/w 界）"}
+    ]
+  },
+  "labels": {
+    "A": ["幂律底幅度", ""],
+    "dm": ["幂律底指数（Porod 极限 4=光滑界面）", ""],
+    "amp": ["峰幅度", ""],
+    "q0": ["峰位（关联峰顶）", "nm^-1"],
+    "sigma": ["峰宽（gauss 标准差）", "nm^-1"],
+    "w": ["峰宽（lorentz 半高半宽）", "nm^-1"],
+    "B": ["常数背景", ""]
+  },
+  "refs": {
+    "paper": "方法学锚：Hammouda broad_peak（NIST）峰形松绑 + Teubner & Strey 1987, J. Chem. Phys. 87, 3195（双连续相分离峰正源）",
+    "si": "无官方 SI（组合模型）；立项实证记录 runs/20261022_phase_separation/（broad_peak/teubner_strey/TS 模型三重失配证据链）",
+    "method": "I(q) = A·q^(−dm) + amp·Peak(q; q0, 宽) + B；Peak_gauss = exp(−(q−q0)²/2σ²)、Peak_lorentz = 1/(1+((q−q0)/w)²)；派生 d=2π/q0、FWHM_gauss=2.3548σ、FWHM_lorentz=2w",
+    "assumptions": [
+      "① phenomenological 组合模型：峰形为标准对称 gauss/lorentz，真实非对称峰按失配披露（首测数据峰/底 log 比 ≈0.11 dex 宽浅峰）",
+      "② **峰浅简并披露**：amp ≪ 底时 amp/q0/峰宽沿「底形主导」简并谷滑动，峰参数一律条件值判读并以 multistart/param_scan 取证",
+      "③ 底-峰尾互相补偿：q 离 q0 >3σ 区 dm 与峰宽弱耦合；峰内区两者竞争",
+      "④ B 为背景/未扣背景残余吸收项；q>拟合窗的弥散界面 Porod 偏离区（首测斜率 ≈q^-2.6）为界面层厚度分析（Ruland 1971）输入，有意留在窗外",
+      "⑤ 双模式（gauss/lorentz）构成峰形对拍对，以 F 检验 + 残差结构裁决；非嵌套时 F 检验按同 dof 数近似披露"
+    ]
+  },
+  "smoke_truth": {
+    "note": "冒烟真值覆盖：默认 INIT 峰幅度 0.02 相对 selftest_ab 的 A=1 幂律底为信号淹没形态（lessons 10-06 C 用例同族），冒烟用峰主导形态验证 amp/q0/峰宽可恢复",
+    "gauss": {"A": 1.0, "dm": 2.5, "amp": 20.0, "q0": 0.6, "sigma": 0.5, "B": 0.001},
+    "lorentz": {"A": 1.0, "dm": 2.5, "amp": 20.0, "q0": 0.6, "w": 0.5, "B": 0.001}
+  },
+  "validation": {
+    "L1_synthetic": "PASS (2026-10-22, saxs_selftest 双模式冒烟零 issue：smoke_truth 峰主导形态（amp=20 vs A=1 幂律底）下 amp/q0/峰宽恢复全过，验证了信号淹没形态会让峰参数假 FAIL 的用例设计预防)",
+    "L2_physical": "首测 PASS (2026-10-22, 相分离 1.dat 窗 [0.075,0.9] nm⁻¹ 加权拟合：gauss χ²/dof=2.306504729943173 / dof=480 / 零撞界 / rms_rel=1.8%；峰形对拍 gauss 2.31 vs lorentz 18.40（B 撞界）→ 数据峰两侧衰减快于 Lorentz 长尾，gauss 胜出；两模式峰位一致 0.460/0.469 nm⁻¹（1.9%）；multistart 5 起点全收敛同一谷、参数一致到 7 位有效数字=全局唯一解；峰幅度 0.0566 为峰位处幂律底 0.0028 的 20 倍=峰贡献主导；残差 ±5% 平坦无系统结构（对比 broad_peak 49.3 的 ±20% 准周期摆动），仅 q<0.10 束挡边缘过渡区 +3~6% 轻微残余；对照锚：broad_peak 49.3 / teubner_strey 106.2 / hardcarbon_ts 209.6 / fuzzy sq 533.9 全部结构性失配)",
+    "human_review": "PASS（2026-10-22 用户终审签字：用户原话「分析结果非常好，入库」；审核通过入库，回归基准固化 baseline/phase_separation_bp/regression_baseline.json，回归数据归档 test_data/phase_separation_bp/）"
+  }
+}
